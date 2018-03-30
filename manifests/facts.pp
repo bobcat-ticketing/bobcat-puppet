@@ -5,6 +5,11 @@ class bobcat::facts (
   $xid_mqtt_version = 'mqttv31'
 ){
   if $xid_enable {
+    package {
+      'mosquitto-clients':
+        ensure => latest;
+    }
+
     file {
       '/etc/facter/facts.d/xid.sh':
         ensure  => file,
