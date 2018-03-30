@@ -1,0 +1,45 @@
+#!/bin/sh
+
+KDK_FS_MOUNTPOINT=/mnt/volatilefs
+KDK_KEYRING=$KDK_FS_MOUNTPOINT/bobcat/kdk_keyring.json
+DESTDIR=`dirname $KDK_KEYRING`
+
+KDK_URL=<%= $::bobcat::validator::validator::kdk_url %>
+CERT=/etc/bobcat/host.crt
+KEY=/etc/bobcat/host.key
+
+CURL="curl -fsS --cert $CERT --key $KEY"
+
+
+if [ ! -d $KDK_FS_MOUNTPOINT/lost+found ]; then
+	logger -p error "KDK filesystem not mounted"
+	exit 1	
+fi
+
+if [ ! -d $DESTDIR ]; then
+	mkdir -p $DESTDIR
+fi
+
+
+tempfile=${KDK_KEYRING}.tmp
+
+if [ -s $KDK_KEYRING ]; then
+	zflag="-z $KDK_KEYRING"
+else
+	zflag=""
+fi
+
+logger -p info "Fetching $KDK_URL"
+$CURL -o $tempfile $zflag $KDK_URL
+
+if [ $? -eq 0 ]; then
+	if [ -s $tempfile ]; then
+		logger -p notice "KDK keyring changed, installing as $KDK_KEYRING"
+		mv $tempfile $KDK_KEYRING
+	else
+		logger -p info "KDK keyring not changed"
+	fi
+else
+	logger -p error "Error fetching KDK keyring"
+	exit 1
+fi

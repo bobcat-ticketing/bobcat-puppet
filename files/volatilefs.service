@@ -1,0 +1,10 @@
+[Unit]
+Description=Mount volatile filesystem
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/volatilefs mount
+
+[Install]
+WantedBy=multi-user.target

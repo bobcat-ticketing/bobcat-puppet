@@ -1,0 +1,120 @@
+#!/bin/bash
+
+FILE=/volatilefs.img
+SIZE=`expr 10 \* 1024 \* 1024`
+MNT=/mnt/volatilefs
+
+
+function create_key_file()
+{
+	local keyfile=$1
+	local secret="hostid="`hostid`
+
+	local mac_address=$(ethtool -P <%= $::bobcat::volatilefs::interface %> | awk '{print $3}' | sed 's/://g')
+	if [ -n "${mac_address}" ]; then
+		secret="${secret} mac=${mac_address}"
+	fi
+
+	local serial=$(cat /proc/cpuinfo | grep ^Serial | awk '{print $3}')
+	if [ -n "${serial}" ]; then
+		secret="${secret} serial=${serial}"
+	fi
+
+	local default_gw_ip=$(ip route | grep default | awk '{print $3}')
+	local default_gw_mac=$(arp -a $default_gw_ip | awk '{print $4}' | sed 's/://g')
+	secret="${secret} gw=${default_gw_mac}"
+
+<% if $facts[$::bobcat::facts::xid_fact] { -%>
+	secret="${secret} xid=\"<%= $facts[$::bobcat::facts::xid_fact] %>\""
+<% } -%>
+
+	echo "Key derivation input: $secret"
+	echo $secret | openssl sha256 -binary > $keyfile
+}
+
+function mount_container()
+{
+	local image=$1
+	local mountpoint=$2
+	local size=$3
+
+	local mapper_device=$(mount | grep $mountpoint | awk '{print $1}')
+	if [ -e "$mapper_device" ]; then
+		echo "$image already mounted"
+		exit 1
+	fi
+
+	if [ ! -d $mountpoint ]; then
+		mkdir $mountpoint
+	fi
+
+	if [ ! -f $image ]; then
+		echo "$image not found, creating new"
+		dd if=/dev/zero of=$image bs=1 count=0 seek=$size
+	fi
+
+	local mapper=$(mktemp -up /dev/mapper)
+	local loop_device=$(losetup --find --show $image)
+
+	local keyfile=$(mktemp /run/volatilefs_XXXXXXXX)
+	create_key_file $keyfile
+
+	cryptsetup luksOpen $loop_device $(basename $mapper) --key-file $keyfile
+
+	if [ $? -eq 0 ]; then
+		mount $mapper $mountpoint
+		echo "$image mounted on $mountpoint"
+	else
+		echo "$image not readable, recreating"
+		cryptsetup luksFormat --batch-mode $loop_device $keyfile
+		cryptsetup luksOpen --key-file $keyfile $loop_device $(basename $mapper)
+		mkfs.ext4 $mapper
+		mount $mapper $mountpoint
+<% if $::bobcat::validator::volatilefs::init_command { -%>
+		<%= $::bobcat::validator::volatilefs::init_command %>
+<% } -%>
+	fi
+
+	rm -f $keyfile
+	exit 0
+}
+
+function umount_container()
+{
+	local image=$1
+	local mountpoint=$2
+
+	local mapper_device=$(mount | grep $mountpoint | awk '{print $1}')
+	if [ ! -e "$mapper_device" ]; then
+		echo "$image not mounted"
+		exit 1
+	fi
+
+	local mapper=$(basename $mapper_device)
+	local loop_device=$(cryptsetup status $mapper | grep device | awk '{print $2}')
+
+	umount $mountpoint
+	cryptsetup luksClose $mapper
+	losetup -d $loop_device
+
+	echo "$image no longer mounted"
+	exit 0
+}
+
+
+if [ ! -f /sbin/cryptsetup ]; then
+	echo "FATAL ERROR: cryptsetup not found"
+	exit 1
+fi
+
+case $1 in
+mount)
+	mount_container $FILE $MNT $SIZE
+	;;
+umount)
+	umount_container $FILE $MNT
+	;;
+*)
+	echo "usage: $0 [mount|umount]"
+	exit 1
+esac

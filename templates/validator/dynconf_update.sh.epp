@@ -1,0 +1,49 @@
+#!/bin/bash
+
+DYNCONF_BASE_URL=<%= $::bobcat::validator::dynconf_base_url %>
+CERT=/etc/bobcat/host.crt
+KEY=/etc/bobcat/host.key
+DESTDIR=/var/lib/bobcat/dynamic
+
+CURL="curl -fsS --cert $CERT --key $KEY"
+
+
+if [ ! -d $DESTDIR ]; then
+	mkdir -p $DESTDIR
+fi
+
+if [ -z "$DYNCONF_BASE_URL" ]; then
+	logger -p critical "dynconf_base_url not configured"
+	exit 1
+fi
+
+function fetch_dynconf()
+{
+	local filename=$1.json
+	local destfile=$DESTDIR/$filename
+	local tempfile=/tmp/dynconf.${filename}.tmp
+
+	if [ -e $destfile ]; then
+		zflag="-z ${destfile}"
+	else
+		zflag=""
+	fi
+
+	logger -p info "Fetching $DYNCONF_BASE_URL/$filename"
+	$CURL -o $tempfile $zflag $DYNCONF_BASE_URL/$filename
+
+	if [ $? -eq 0 ]; then
+		if [ -s $tempfile ]; then
+			logger -p notice "${filename} changed, installing as ${destfile}"
+			mv $tempfile $destfile
+		else
+			logger -p info "${filename} not changed"
+		fi
+	else
+		logger -p error "Error fetching ${filename}"
+	fi
+}
+
+for data in blacklists ticklemacros issuer_keyring participants products services stops; do
+	fetch_dynconf $data
+done

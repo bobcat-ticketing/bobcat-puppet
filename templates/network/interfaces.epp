@@ -1,0 +1,9 @@
+# This file is managed by Puppet - DO NOT EDIT
+
+auto lo
+iface lo inet loopback
+
+iface <%= $network::interface::device %> inet static
+  address <%= $network::interface::address %>
+  netmask <%= $network::interface::netmask %>
+  gateway <%= $network::interface::gateway %>

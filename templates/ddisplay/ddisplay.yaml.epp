@@ -1,0 +1,36 @@
+display:
+  driver: bobcat_ddisplay.display.generic:Generic
+  #driver: bobcat_ddisplay.display.access_is:KTS820
+  driver_config:
+    fullscreen: False
+    status:
+      font: Helvetica
+      size: 20
+    ticket:
+      font: Helvetica
+      size: 22
+    time:
+      font: Courier
+      size: 18
+    adult_category: a
+    pid: 1
+    not_ready: "Stängd"
+    queue: "{} ej skickade viseringar"
+    ready: "OK"
+    #environment:
+    #  SDL_VIDEODRIVER: fbcon
+    #  SDL_FBDEV: /dev/fb1
+    #  SDL_MOUSEDEV: /dev/input/touchscreen
+    #  SDL_MOUSEDRV: TSLIB
+    #  SDL_AUDIODRIVER: alsa
+    #  SDL_AUDIODRIVER: dummy
+
+mqtt:
+  server: mqtt://127.0.0.1
+  input:
+    latest:
+      topic: /service/v1/Validate/latestticket
+      format: json
+    status:
+      topic: /service/v1/Validate/status
+      format: json

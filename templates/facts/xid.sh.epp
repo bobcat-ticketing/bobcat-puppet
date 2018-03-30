@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Fetch Västtrafik XID and return as a fact for puppet
+
+VEHICLE_XID=$(mosquitto_sub -h <%= $::bobcat::validator::facts::xid_mqtt_broker %> -V <%= $::bobcat::validator::facts::xid_mqtt_version %> -t /system/xid/# -v -C 1)
+
+if [ $? -eq 0 -a -n "${VEHICLE_XID}" ]; then
+	IFS='/' read -a TOPIC <<< "${VEHICLE_XID}"
+	echo <%= $::bobcat::validator::facts::xid_fact %>=${TOPIC[3]}
+fi
