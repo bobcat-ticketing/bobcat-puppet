@@ -7,6 +7,6 @@ iface <%= $::bobcat::network::interfaces::device %> inet static
   address <%= $::bobcat::network::interfaces::address %>
   netmask <%= $::bobcat::network::interfaces::netmask %>
   gateway <%= $::bobcat::network::interfaces::gateway %>
-<% $$::bobcat::network::interfaces::nameservers.each |$server| { -%>
+<% $::bobcat::network::interfaces::nameservers.each |$server| { -%>
   dns-nameserver <%= $server %>
 <% } -%>
