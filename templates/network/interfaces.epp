@@ -10,3 +10,6 @@ iface <%= $::bobcat::network::interfaces::device %> inet static
 <% $::bobcat::network::interfaces::nameservers.each |$server| { -%>
   dns-nameserver <%= $server %>
 <% } -%>
+<% if $::bobcat::network::interfaces::search { -%>
+  dns-search <%= $::bobcat::network::interfaces::search.join(',') %>
+<% } -%>
