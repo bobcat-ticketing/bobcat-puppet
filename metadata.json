@@ -1,0 +1,18 @@
+{
+  "name": "kirei/bobcat_embedded",
+  "version": "0.1.0",
+  "author": "kirei",
+  "summary": "Deploy Bobcat embedded services",
+  "license": "BSD",
+  "source": "https://github.com/kirei/bobcat-puppet-embedded",
+  "project_page": "https://github.com/kirei/bobcat-puppet-embedded",
+  "issues_url": "https://github.com/kirei/bobcat-puppet-embedded/issues",
+  "dependencies": [
+    {
+      "name": "puppetlabs-stdlib",
+      "version_requirement": ">= 1.0.0"
+    }
+  ],
+  "data_provider": null
+}
+
