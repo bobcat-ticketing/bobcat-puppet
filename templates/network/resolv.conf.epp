@@ -1,8 +1,0 @@
-# This file is managed by Puppet - DO NOT EDIT
-
-<% if $::bobcat::network::domain { -%>
-domain <%= $::bobcat::network::domain %>
-<% } -%>
-<% $::bobcat::network::nameservers.each |$server| { -%>
-nameserver <%= $server %>
-<% } -%>

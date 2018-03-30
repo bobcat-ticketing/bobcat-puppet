@@ -3,7 +3,10 @@
 auto lo
 iface lo inet loopback
 
-iface <%= $network::interface::device %> inet static
-  address <%= $network::interface::address %>
-  netmask <%= $network::interface::netmask %>
-  gateway <%= $network::interface::gateway %>
+iface <%= $::bobcat::network::interfaces::device %> inet static
+  address <%= $::bobcat::network::interfaces::address %>
+  netmask <%= $::bobcat::network::interfaces::netmask %>
+  gateway <%= $::bobcat::network::interfaces::gateway %>
+<% $$::bobcat::network::interfaces::nameservers.each |$server| { -%>
+  dns-nameserver <%= $server %>
+<% } -%>

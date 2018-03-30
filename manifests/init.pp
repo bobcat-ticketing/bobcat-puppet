@@ -1,7 +1,8 @@
-class bobcat
-{
+class bobcat {
+
   include bobcat::facts
-  include bobcat::network
+  include bobcat::network::interfaces
+  include bobcat::network::ntp
   
   $extra_packages = [ 'curl' ]
   package {
@@ -32,4 +33,5 @@ class bobcat
       source  => "/etc/puppet/ssl/private_keys/${::fqdn}.pem",
       require => File['/etc/bobcat'];
   }
+
 }
