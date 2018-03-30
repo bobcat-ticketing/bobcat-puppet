@@ -1,8 +1,6 @@
 class bobcat {
 
   include bobcat::facts
-  include bobcat::network::interfaces
-  include bobcat::network::ntp
   
   $extra_packages = [ 'curl' ]
   package {
