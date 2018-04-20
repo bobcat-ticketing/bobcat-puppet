@@ -4,7 +4,7 @@ KDK_FS_MOUNTPOINT=/mnt/volatilefs
 KDK_KEYRING=$KDK_FS_MOUNTPOINT/bobcat/kdk_keyring.json
 DESTDIR=`dirname $KDK_KEYRING`
 
-KDK_URL=<%= $::bobcat::validator::validator::kdk_url %>
+KDK_URL=<%= $::bobcat::validator::kdk_url %>
 CERT=/etc/bobcat/host.crt
 KEY=/etc/bobcat/host.key
 
