@@ -6,5 +6,5 @@ VEHICLE_XID=$(mosquitto_sub -h <%= $::bobcat::validator::facts::xid_mqtt_broker 
 
 if [ $? -eq 0 -a -n "${VEHICLE_XID}" ]; then
 	IFS='/' read -a TOPIC <<< "${VEHICLE_XID}"
-	echo <%= $::bobcat::validator::facts::xid_fact %>=${TOPIC[3]}
+	echo <%= $::bobcat::facts::xid_fact %>=${TOPIC[3]}
 fi
