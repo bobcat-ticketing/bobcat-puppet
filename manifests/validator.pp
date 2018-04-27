@@ -2,7 +2,8 @@ class bobcat::validator (
   $enabled          = true,
   $config_template  = 'bobcat/validator/validator.yaml.epp',
   $kdk_url          = undef,
-  $dynconf_base_url = undef
+  $dynconf_base_url = undef,
+  $dynconf_timer    = 'hourly',
 ){
   include bobcat::volatilefs
   include bobcat::soundfix
@@ -53,6 +54,28 @@ class bobcat::validator (
       group   => 'root',
       mode    => '0444',
       content => epp($config_template);
+
+    '/etc/systemd/system/bobcat-dynconf.timer':
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0544',
+      source  => epp('bobcat/validator/bobcat-dynconf.timer.epp'),
+      notify  => Exec['bobcat-systemctl-daemon-reload'];
+
+    '/etc/systemd/system/bobcat-dynconf.service':
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0544',
+      source  => epp('bobcat/validator/bobcat-dynconf.service.epp'),
+      notify  => Exec['bobcat-systemctl-daemon-reload'];
+  }
+
+  exec {
+    'bobcat-systemctl-daemon-reload':
+      command     => '/bin/systemctl daemon-reload',
+      refreshonly => true;
   }
 
   service {

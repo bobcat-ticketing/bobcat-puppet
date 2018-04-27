@@ -1,0 +1,6 @@
+[Unit]
+Description=Dynamic Bobcat configuration service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/dynconf_update
