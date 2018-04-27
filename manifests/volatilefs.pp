@@ -34,7 +34,6 @@ class bobcat::volatilefs (
 
   service {
     'volatilefs':
-      ensure => running,
       enable => $enabled;
   }
 }
