@@ -25,7 +25,6 @@ class bobcat::soundfix
 
   service {
     'soundfix':
-      ensure => running,
       enable => true;
   }
 }
