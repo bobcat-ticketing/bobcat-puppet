@@ -82,5 +82,8 @@ class bobcat::validator (
     'bobcat-validator':
       ensure => running,
       enable => $enabled;
+
+    'bobcat-dynconf':
+      enable => $enabled;
   }
 }
