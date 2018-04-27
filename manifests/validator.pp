@@ -60,7 +60,7 @@ class bobcat::validator (
       owner   => 'root',
       group   => 'root',
       mode    => '0544',
-      source  => epp('bobcat/validator/bobcat-dynconf.timer.epp'),
+      content => epp('bobcat/validator/bobcat-dynconf.timer.epp'),
       notify  => Exec['bobcat-systemctl-daemon-reload'];
 
     '/etc/systemd/system/bobcat-dynconf.service':
@@ -68,7 +68,7 @@ class bobcat::validator (
       owner   => 'root',
       group   => 'root',
       mode    => '0544',
-      source  => epp('bobcat/validator/bobcat-dynconf.service.epp'),
+      content => epp('bobcat/validator/bobcat-dynconf.service.epp'),
       notify  => Exec['bobcat-systemctl-daemon-reload'];
   }
 
