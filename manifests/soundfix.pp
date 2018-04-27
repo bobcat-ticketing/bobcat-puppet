@@ -1,5 +1,6 @@
-class bobcat::soundfix
-{
+class bobcat::soundfix (
+  $enabled = true,
+){
   file {
     '/usr/local/bin/soundfix':
       ensure  => file,
@@ -25,6 +26,6 @@ class bobcat::soundfix
 
   service {
     'soundfix':
-      enable => true;
+      enable => $enabled;
   }
 }
