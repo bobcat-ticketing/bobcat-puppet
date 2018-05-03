@@ -1,5 +1,6 @@
 [Unit]
 Description=Dynamic Bobcat configuration timer
+After=network.target power_on_self_test.service
 
 [Timer]
 OnCalendar=<%= $::bobcat::validator::dynconf_timer %>
