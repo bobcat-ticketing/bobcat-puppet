@@ -3,7 +3,7 @@ class bobcat::volatilefs (
   $interface    = "eth0",
   $init_command = undef,
 ){
-  $volatilefs_packages = [ 'ethtool', 'cryptsetup' ]
+  $volatilefs_packages = [ 'cryptsetup' ]
   package {
     $volatilefs_packages:
       ensure => latest;
@@ -15,6 +15,7 @@ class bobcat::volatilefs (
       owner   => 'root',
       group   => 'root',
       mode    => '0544',
+      require => Package['ethtool'],
       content => epp('bobcat/volatilefs.sh.epp');
 
     '/etc/systemd/system/volatilefs.service':
