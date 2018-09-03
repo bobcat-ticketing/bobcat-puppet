@@ -1,6 +1,8 @@
 #!/bin/bash
 
-PM_DEV=/sys/devices/soc0/sound-sgtl5000.24/HiFi/pmdown_time
+PM_DEVS=""
+PM_DEVS="$PM_DEVS /sys/devices/soc0/sound-sgtl5000.24/HiFi/pmdown_time"
+PM_DEVS="$PM_DEVS /sys/devices/soc0/sound-sgtl5000/HiFi/pmdown_time"
 
 function write_dev
 {
@@ -20,20 +22,24 @@ function write_dev
 	fi
 }
 
-if [ -e $PM_DEV ]; then
-	echo "INFO: Device ${PM_DEV} found, fixing sound"
+for PM_DEV in $PM_DEVS; do
+	if [ -e $PM_DEV ]; then
+		echo "INFO: Device ${PM_DEV} found, fixing sound"
 
-	# Enabling GPIO 125 (if needed)
-	if [ ! -d /sys/class/gpio/gpio125 ]; then
-		write_dev /sys/class/gpio/export 125
+		# Enabling GPIO 125 (if needed)
+		if [ ! -d /sys/class/gpio/gpio125 ]; then
+			write_dev /sys/class/gpio/export 125
+		fi
+
+		# Configure GPIO 125 as output and set GPIO 125 high
+		write_dev /sys/class/gpio/gpio125/direction out && \
+		write_dev /sys/class/gpio/gpio125/value 1
+
+		# Set sound device power down to 'never'
+		write_dev $PM_DEV -1
+
+		exit 0
 	fi
+done
 
-	# Configure GPIO 125 as output and set GPIO 125 high
-	write_dev /sys/class/gpio/gpio125/direction out && \
-	write_dev /sys/class/gpio/gpio125/value 1
-
-	# Set sound device power down to 'never'
-	write_dev $PM_DEV -1
-else
-	echo "NOTICE: Device ${PM_DEV} not found, not fixing sound"
-fi
+echo "NOTICE: No device found, not fixing sound"
