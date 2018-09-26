@@ -1,0 +1,24 @@
+module(load="imuxsock") # provides support for local system logging
+module(load="imklog")   # provides kernel logging support
+
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+
+$FileOwner root
+$FileGroup adm
+$FileCreateMode 0640
+$DirCreateMode 0755
+$Umask 0022
+
+$WorkDirectory /var/spool/rsyslog
+
+$IncludeConfig /etc/rsyslog.d/*.conf
+
+*.<%= $::bobcat::os::syslog::log_level %> action(
+    type="omfwd"
+    target="<%= $::bobcat::os::syslog::target_host %>"
+    protocol="tcp"
+    port="514"
+    action.resumeRetryCount="100"
+    queue.type="linkedList"
+    queue.size="<%= $::bobcat::os::syslog::queue_size %>"
+)
