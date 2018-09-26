@@ -2,6 +2,8 @@ class bobcat::ddisplay (
   $enabled         = true,
   $config_template = 'bobcat/ddisplay/ddisplay.yaml.epp'
 ){
+  require bobcat
+
   package {
     'bobcat-ddisplay':
       ensure => latest;

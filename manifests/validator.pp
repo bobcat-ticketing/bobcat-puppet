@@ -5,8 +5,10 @@ class bobcat::validator (
   $dynconf_base_url = undef,
   $dynconf_timer    = 'hourly',
 ){
-  include bobcat::volatilefs
-  include bobcat::soundfix
+  require bobcat
+  require bobcat::facts
+  require bobcat::volatilefs
+  require bobcat::soundfix
 
   package {
     'bobcat-validator':

@@ -1,7 +1,5 @@
 class bobcat {
 
-  include bobcat::facts
-  
   $extra_packages = [ 'curl' ]
   package {
     $extra_packages:
