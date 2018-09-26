@@ -4,8 +4,8 @@ class bobcat {
   
   $extra_packages = [ 'curl' ]
   package {
-   $extra_packages:
-     ensure => latest;
+    $extra_packages:
+      ensure => latest;
   }
 
   file {
