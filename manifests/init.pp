@@ -28,6 +28,14 @@ class bobcat {
       mode    => '0440',
       source  => "/etc/puppet/ssl/private_keys/${::fqdn}.pem",
       require => File['/etc/bobcat'];
+
+    '/etc/bobcat/ca.crt':
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0444',
+      source  => "/etc/puppet/ssl/certs/ca.pem",
+      require => File['/etc/bobcat'];
   }
 
 }
