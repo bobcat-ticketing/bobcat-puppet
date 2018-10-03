@@ -13,7 +13,7 @@
 			"version_requirement": ">= 1.0.0"
 		},
 		{
-			"name": "pcfens/ca_cert",
+			"name": "pcfens-ca_cert",
 			"version_requirement": ">= 2.1.0"
 		}
 	],
