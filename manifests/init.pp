@@ -18,7 +18,7 @@ class bobcat {
       owner   => 'root',
       group   => 'root',
       mode    => '0444',
-      source  => "/etc/puppet/ssl/certs/${::fqdn}.pem",
+      source  => "/etc/puppet/ssl/certs/${::clientcert}.pem",
       require => File['/etc/bobcat'];
 
     '/etc/bobcat/host.key':
@@ -26,7 +26,7 @@ class bobcat {
       owner   => 'root',
       group   => 'root',
       mode    => '0440',
-      source  => "/etc/puppet/ssl/private_keys/${::fqdn}.pem",
+      source  => "/etc/puppet/ssl/private_keys/${::clientcert}.pem",
       require => File['/etc/bobcat'];
 
     '/etc/bobcat/ca.crt':
