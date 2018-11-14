@@ -1,6 +1,10 @@
 [Unit]
 Description=Dynamic Bobcat configuration service
+After=volatilefs
 
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/dynconf_update
+
+[Install]
+WantedBy=multi-user.target
