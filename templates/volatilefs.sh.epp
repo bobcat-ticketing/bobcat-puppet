@@ -4,6 +4,10 @@ FILE=/volatilefs.img
 SIZE=`expr 10 \* 1024 \* 1024`
 MNT=/mnt/volatilefs
 
+function dynconf_update()
+{
+	/usr/local/bin/dynconf_update
+}
 
 function create_key_file()
 {
@@ -110,6 +114,7 @@ fi
 case $1 in
 mount)
 	mount_container $FILE $MNT $SIZE
+	dynconf_update
 	;;
 umount)
 	umount_container $FILE $MNT
