@@ -80,7 +80,6 @@ function mount_container()
 	fi
 
 	rm -f $keyfile
-	exit 0
 }
 
 function umount_container()
@@ -115,6 +114,7 @@ case $1 in
 mount)
 	mount_container $FILE $MNT $SIZE
 	dynconf_update
+	exit 0
 	;;
 umount)
 	umount_container $FILE $MNT
