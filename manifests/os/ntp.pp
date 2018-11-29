@@ -1,27 +1,59 @@
 class bobcat::os::ntp (
-  $servers   = [ 'ntp.se' ]
+  $servers = [ 'ntp.se' ],
+  $package = 'ntp',
 ){
 
-  package {
-    'openntpd':
-      ensure => latest;
+  if $package == 'openntpd' {
+
+    package { 'ntp': ensure => purged; }
+    package { 'openntpd': ensure => latest; }
+
+    file {
+      '/etc/openntpd/ntpd.conf':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        content => epp('bobcat/openntpd.conf.epp'),
+        notify  => Service['openntpd'];
+
+      '/etc/default/openntpd':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        content => "DAEMON_OPTS=\"-s -f /etc/openntpd/ntpd.conf\"\n",
+        notify  => Service['openntpd'];
+    }
+
+    service { 'openntpd': ensure => running, enable => true, name => 'openntpd'; }
+
   }
 
-  file {
-    '/etc/openntpd/ntpd.conf':
-      ensure  => file,
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0444',
-      content => epp('bobcat/ntpd.conf.epp'),
-      notify  => Service['openntpd'];
-  }
+  if $package == 'ntp' {
 
-  service {
-    'openntpd':
-      ensure => running,
-      enable => true,
-      name   => 'openntpd';
+    package { 'openntpd': ensure => purged; }
+    package { 'ntp': ensure => latest; }
+
+    file {
+      '/etc/ntp.conf':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        content => epp('bobcat/ntp.conf.epp'),
+        notify  => Service['ntp'];
+
+      '/etc/default/ntp':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0444',
+        content => "NTPD_OPTS=\"-g\"\n",
+        notify  => Service['ntp'];
+    }
+
+    service { 'ntp': ensure => running, enable => true, name => 'ntp'; }
   }
 
 }

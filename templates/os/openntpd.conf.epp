@@ -1,4 +1,6 @@
 # This file is managed by Puppet - DO NOT EDIT
+#
+# OpenNTPD Configuration
 
 <% $::bobcat::os::ntp::servers.each |$server| { -%>
 server <%= $server %>

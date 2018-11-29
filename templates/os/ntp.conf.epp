@@ -1,0 +1,15 @@
+# This file is managed by Puppet - DO NOT EDIT
+#
+# Classic NTPD Configuration
+
+driftfile /var/lib/ntp/ntp.drift
+
+restrict -4 default kod notrap nomodify nopeer noquery limited
+restrict -6 default kod notrap nomodify nopeer noquery limited
+restrict 127.0.0.1
+restrict ::1
+restrict source notrap nomodify noquery
+
+<% $::bobcat::os::ntp::servers.each |$server| { -%>
+server <%= $server %>
+<% } -%>
