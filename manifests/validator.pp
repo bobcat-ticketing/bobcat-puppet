@@ -55,7 +55,8 @@ class bobcat::validator (
       owner   => 'root',
       group   => 'root',
       mode    => '0444',
-      content => epp($config_template);
+      content => epp($config_template),
+      notify  => Service['bobcat-validator'];
 
     '/etc/systemd/system/bobcat-dynconf.timer':
       ensure  => file,
