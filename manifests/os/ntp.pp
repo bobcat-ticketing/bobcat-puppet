@@ -1,13 +1,11 @@
 class bobcat::os::ntp (
   $servers = [ 'ntp.se' ],
-  $package = 'ntp',
+  $package = 'openntpd',
 ){
 
   if $package == 'openntpd' {
-
     package { 'ntp': ensure => purged; }
     package { 'openntpd': ensure => latest; }
-
     file {
       '/etc/openntpd/ntpd.conf':
         ensure  => file,
@@ -16,7 +14,6 @@ class bobcat::os::ntp (
         mode    => '0444',
         content => epp('bobcat/openntpd.conf.epp'),
         notify  => Service['openntpd'];
-
       '/etc/default/openntpd':
         ensure  => file,
         owner   => 'root',
@@ -25,16 +22,12 @@ class bobcat::os::ntp (
         content => "DAEMON_OPTS=\"-s -f /etc/openntpd/ntpd.conf\"\n",
         notify  => Service['openntpd'];
     }
-
     service { 'openntpd': ensure => running, enable => true, name => 'openntpd'; }
-
   }
 
   if $package == 'ntp' {
-
     package { 'openntpd': ensure => purged; }
     package { 'ntp': ensure => latest; }
-
     file {
       '/etc/ntp.conf':
         ensure  => file,
@@ -43,7 +36,6 @@ class bobcat::os::ntp (
         mode    => '0444',
         content => epp('bobcat/ntp.conf.epp'),
         notify  => Service['ntp'];
-
       '/etc/default/ntp':
         ensure  => file,
         owner   => 'root',
@@ -52,7 +44,6 @@ class bobcat::os::ntp (
         content => "NTPD_OPTS=\"-g\"\n",
         notify  => Service['ntp'];
     }
-
     service { 'ntp': ensure => running, enable => true, name => 'ntp'; }
   }
 
