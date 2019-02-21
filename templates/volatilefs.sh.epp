@@ -14,24 +14,46 @@ function create_key_file()
 	local mac_address=$(ethtool -P $netif | awk '{print $3}' | sed 's/://g')
 	if [ -n "${mac_address}" ]; then
 		secret="${secret} mac=${mac_address}"
+	else
+		>&1 echo "No local MAC address found"
 	fi
 
 	local serial=$(cat /proc/cpuinfo | grep ^Serial | awk '{print $3}')
 	if [ -n "${serial}" ]; then
 		secret="${secret} serial=${serial}"
+	else
+		>&1 echo "No CPU serial number found"
 	fi
 
 	local default_gw_ip=$(ip route list | grep default | awk '{print $3}')
 	if [ -n "$default_gw_ip" ]; then
-		local default_gw_mac=$(ip neigh show $default_gw_ip | awk '{print $5}' | sed 's/://g')
-		secret="${secret} gw=${default_gw_mac}"
+		local tries=10
+		while [ $tries -gt 0 ]; do
+			ping -n -c 3 $default_gw_ip >/dev/null
+			local default_gw_mac=$(ip neigh show $default_gw_ip | awk '{print $5}' | sed 's/://g')
+			if [ -n "${default_gw_mac}" ]; then
+				break
+			fi
+			tries=`expr $tries - 1`
+			>&1 echo "No default gateway MAC found, $tries tries left"
+		done
+		if [ -n "${default_gw_mac}" ]; then
+			secret="${secret} gw=${default_gw_mac}"
+		else
+			>&1 echo "No gateway MAC address found"
+		fi
 	fi
 
 <% if $facts[$::bobcat::facts::xid_fact] { -%>
-	secret="${secret} xid=\"<%= $facts[$::bobcat::facts::xid_fact] %>\""
+	local xid="<%= $facts[$::bobcat::facts::xid_fact] %>"
+	if [ -n "${xid}" ]; then
+		secret="${secret} xid=${xid}"
+	else
+		>&1 echo "No XID found"
+	fi
 <% } -%>
 
-	echo "Key derivation input: $secret"
+	>&2 echo "Key derivation input: $secret"
 	echo $secret | openssl sha256 -binary > $keyfile
 }
 
