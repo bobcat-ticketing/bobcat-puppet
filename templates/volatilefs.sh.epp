@@ -18,13 +18,6 @@ function create_key_file()
 		>&1 echo "No local MAC address found"
 	fi
 
-	local serial=$(cat /proc/cpuinfo | grep ^Serial | awk '{print $3}')
-	if [ -n "${serial}" ]; then
-		secret="${secret} serial=${serial}"
-	else
-		>&1 echo "No CPU serial number found"
-	fi
-
 	local default_gw_ip=$(ip route list | grep default | awk '{print $3}')
 	if [ -n "$default_gw_ip" ]; then
 		local tries=10
