@@ -1,6 +1,6 @@
 [Unit]
 Description=Dynamic Bobcat configuration service
-After=volatilefs
+After=volatilefs.service
 
 [Service]
 Type=oneshot
