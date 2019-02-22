@@ -13,7 +13,7 @@ class bobcat::os::ntp (
       owner   => 'root',
       group   => 'root',
       mode    => '0444',
-      content => epp('bobcat/ntpd.conf.epp'),
+      content => epp('bobcat/os/ntpd.conf.epp'),
       notify  => Service['openntpd'];
   }
 
