@@ -11,6 +11,9 @@ class bobcat::validator (
   require bobcat::soundfix
 
   package {
+    'bobcat-python':
+      ensure => latest;
+
     'bobcat-validator':
       ensure => latest;
   }

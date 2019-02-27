@@ -5,6 +5,9 @@ class bobcat::ddisplay (
   require bobcat
 
   package {
+    'bobcat-python':
+      ensure => latest;
+
     'bobcat-ddisplay':
       ensure => latest;
   }
