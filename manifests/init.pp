@@ -1,4 +1,6 @@
-class bobcat {
+class bobcat (
+  $puppet_ssl = "/etc/puppet/ssl"
+){
 
   $extra_packages = [ 'curl' ]
   package {
@@ -18,7 +20,7 @@ class bobcat {
       owner   => 'root',
       group   => 'root',
       mode    => '0444',
-      source  => "/etc/puppet/ssl/certs/${::clientcert}.pem",
+      source  => "${puppet_ssl}/certs/${::clientcert}.pem",
       require => File['/etc/bobcat'];
 
     '/etc/bobcat/host.key':
@@ -26,7 +28,7 @@ class bobcat {
       owner   => 'root',
       group   => 'root',
       mode    => '0440',
-      source  => "/etc/puppet/ssl/private_keys/${::clientcert}.pem",
+      source  => "${puppet_ssl}/private_keys/${::clientcert}.pem",
       require => File['/etc/bobcat'];
 
     '/etc/bobcat/ca.crt':
@@ -34,7 +36,7 @@ class bobcat {
       owner   => 'root',
       group   => 'root',
       mode    => '0444',
-      source  => "/etc/puppet/ssl/certs/ca.pem",
+      source  => "${puppet_ssl}/certs/ca.pem",
       require => File['/etc/bobcat'];
   }
 
