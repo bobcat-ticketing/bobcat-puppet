@@ -3,7 +3,7 @@ class bobcat::volatilefs (
   $interface    = "eth0",
   $init_command = undef,
 ){
-  $volatilefs_packages = [ 'cryptsetup' ]
+  $volatilefs_packages = [ 'cryptsetup', 'ethtool' ]
   package {
     $volatilefs_packages:
       ensure => latest;
