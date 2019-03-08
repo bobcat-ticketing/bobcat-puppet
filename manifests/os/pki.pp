@@ -1,9 +1,12 @@
-class bobcat::os::pki {
+class bobcat::os::pki (
+  $ca_name   = "Puppet CA",
+  $ca_source = "file:///etc/puppet/ssl/certs/ca.pem"
+){
   require ca_cert  # https://forge.puppet.com/pcfens/ca_cert
 
   ca_cert::ca {
-    'Puppet CA':
+    $ca_name:
       ensure => 'trusted',
-      source => "file://${::bobcat::puppet_ssl}/certs/ca.pem";
+      source => "${ca_source}";
   }
 }
