@@ -4,6 +4,6 @@ class bobcat::os::pki {
   ca_cert::ca {
     'Puppet CA':
       ensure => 'trusted',
-      source => 'file://${::bobcat::puppet_ssl}/certs/ca.pem';
+      source => "file://${::bobcat::puppet_ssl}/certs/ca.pem";
   }
 }
