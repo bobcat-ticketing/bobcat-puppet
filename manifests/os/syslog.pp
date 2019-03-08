@@ -13,11 +13,12 @@ class bobcat::os::syslog (
  
   file {
     "/etc/rsyslog.conf":
-      ensure => file,
-      owner => 'root',
-      group => 'root',
-      mode => '644',
-      content => epp('bobcat/os/rsyslog.conf.epp');
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '644',
+      content => epp('bobcat/os/rsyslog.conf.epp'),
+      notify  => Service['rsyslog'];
   }
  
   service {
