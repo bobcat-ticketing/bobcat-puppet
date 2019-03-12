@@ -13,7 +13,7 @@ class bobcat::soundfix (
       ensure  => file,
       owner   => 'root',
       group   => 'root',
-      mode    => '0544',
+      mode    => '0444',
       source  => 'puppet:///modules/bobcat/soundfix.service',
       notify  => Exec['soundfix-systemctl-daemon-reload'];
   }

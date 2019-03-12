@@ -22,7 +22,7 @@ class bobcat::volatilefs (
       ensure  => file,
       owner   => 'root',
       group   => 'root',
-      mode    => '0544',
+      mode    => '0444',
       source  => 'puppet:///modules/bobcat/volatilefs.service',
       notify  => Exec['volatilefs-systemctl-daemon-reload'];
   }
