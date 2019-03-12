@@ -2,6 +2,7 @@ class bobcat::os::syslog (
   $log_level   = 'ERROR',
   $target_host = undef,
   $queue_size  = 8192,
+  $template    = 'bobcat/os/rsyslog.conf.epp',
 ){
 
   $packages = [ 'rsyslog' ]
@@ -17,7 +18,7 @@ class bobcat::os::syslog (
       owner   => 'root',
       group   => 'root',
       mode    => '644',
-      content => epp('bobcat/os/rsyslog.conf.epp'),
+      content => epp($template),
       notify  => Service['rsyslog'];
   }
  
