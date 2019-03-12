@@ -5,7 +5,7 @@ class bobcat::os::syslog (
   $config_template = 'bobcat/os/rsyslog.conf.epp',
 ){
 
-  $packages = [ 'rsyslog' ]
+  $packages = [ 'rsyslog', 'rsyslog-gnutls' ]
 
   package {
     $packages:
