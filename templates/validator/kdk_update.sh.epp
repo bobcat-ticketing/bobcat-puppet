@@ -9,10 +9,11 @@ CERT=/etc/bobcat/host.crt
 KEY=/etc/bobcat/host.key
 
 CURL="curl -fsS --cert $CERT --key $KEY"
+LOGGER="logger -t bobcat_kdk_update"
 
 
 if [ ! -d $KDK_FS_MOUNTPOINT/lost+found ]; then
-	logger -p error "KDK filesystem not mounted"
+	$LOGGER -p error "KDK filesystem not mounted"
 	exit 1	
 fi
 
@@ -29,17 +30,17 @@ else
 	zflag=""
 fi
 
-logger -p info "Fetching $KDK_URL"
+$LOGGER -p info "Fetching $KDK_URL"
 $CURL -o $tempfile $zflag $KDK_URL
 
 if [ $? -eq 0 ]; then
 	if [ -s $tempfile ]; then
-		logger -p notice "KDK keyring changed, installing as $KDK_KEYRING"
+		$LOGGER -p notice "KDK keyring changed, installing as $KDK_KEYRING"
 		mv $tempfile $KDK_KEYRING
 	else
-		logger -p info "KDK keyring not changed"
+		$LOGGER -p info "KDK keyring not changed"
 	fi
 else
-	logger -p error "Error fetching KDK keyring"
+	$LOGGER -p error "Error fetching KDK keyring"
 	exit 1
 fi

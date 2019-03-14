@@ -6,6 +6,7 @@ KEY=/etc/bobcat/host.key
 DESTDIR=/var/lib/bobcat/dynamic
 
 CURL="curl -fsS --cert $CERT --key $KEY"
+LOGGER="logger -t bobcat_dynconf_update"
 
 
 if [ ! -d $DESTDIR ]; then
@@ -13,7 +14,7 @@ if [ ! -d $DESTDIR ]; then
 fi
 
 if [ -z "$DYNCONF_BASE_URL" ]; then
-	logger -p critical "dynconf_base_url not configured"
+	$LOGGER -p critical "dynconf_base_url not configured"
 	exit 1
 fi
 
@@ -29,18 +30,18 @@ function fetch_dynconf()
 		zflag=""
 	fi
 
-	logger -p info "Fetching $DYNCONF_BASE_URL/$filename"
+	$LOGGER -p info "Fetching $DYNCONF_BASE_URL/$filename"
 	$CURL -o $tempfile $zflag $DYNCONF_BASE_URL/$filename
 
 	if [ $? -eq 0 ]; then
 		if [ -s $tempfile ]; then
-			logger -p notice "${filename} changed, installing as ${destfile}"
+			$LOGGER -p notice "${filename} changed, installing as ${destfile}"
 			mv $tempfile $destfile
 		else
-			logger -p info "${filename} not changed"
+			$LOGGER -p info "${filename} not changed"
 		fi
 	else
-		logger -p error "Error fetching ${filename}"
+		$LOGGER -p error "Error fetching ${filename}"
 	fi
 }
 
