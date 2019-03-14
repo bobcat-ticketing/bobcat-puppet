@@ -34,7 +34,7 @@ function fetch_dynconf()
 	$CURL -o $tempfile $zflag $DYNCONF_BASE_URL/$filename
 
 	if [ $? -eq 0 ]; then
-		if [ -s $tempfile ]; then
+		if [ -e $tempfile ]; then
 			$LOGGER -p notice "${filename} changed, installing as ${destfile}"
 			mv $tempfile $destfile
 		else
@@ -43,6 +43,7 @@ function fetch_dynconf()
 	else
 		$LOGGER -p error "Error fetching ${filename}"
 	fi
+	rm -f $tempfile
 }
 
 for data in blacklists ticklemacros issuer_keyring participants products services stops; do
