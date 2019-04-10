@@ -14,6 +14,7 @@ $WorkDirectory /var/spool/rsyslog
 $IncludeConfig /etc/rsyslog.d/*.conf
 
 *.<%= $::bobcat::os::syslog::log_level %> action(
+    template="RSYSLOG_SyslogProtocol23Format"
     type="omfwd"
     target="<%= $::bobcat::os::syslog::target_host %>"
     protocol="tcp"
