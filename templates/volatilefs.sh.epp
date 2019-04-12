@@ -88,8 +88,8 @@ function mount_container()
 		cryptsetup luksOpen --key-file $keyfile $loop_device $(basename $mapper)
 		mkfs.ext4 $mapper
 		mount $mapper $mountpoint
-<% if $::bobcat::validator::volatilefs::init_command { -%>
-		<%= $::bobcat::validator::volatilefs::init_command %>
+<% if $::bobcat::volatilefs::init_command { -%>
+		<%= $::bobcat::volatilefs::init_command %>
 <% } -%>
 	fi
 
