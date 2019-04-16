@@ -1,4 +1,5 @@
 class bobcat::os::syslog (
+  $enabled         = true,
   $log_level       = 'ERROR',
   $target_host     = undef,
   $queue_size      = 8192,
