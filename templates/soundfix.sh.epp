@@ -38,6 +38,10 @@ for PM_DEV in $PM_DEVS; do
 		# Set sound device power down to 'never'
 		write_dev $PM_DEV -1
 
+		# Set mixer PCM volume
+		amixer set PCM <%= $pcmvol %>%
+		
+
 		exit 0
 	fi
 done

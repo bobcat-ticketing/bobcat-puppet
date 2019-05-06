@@ -1,5 +1,6 @@
 class bobcat::soundfix (
   $enabled = true,
+  $pcmvol = 50
 ){
   file {
     '/usr/local/bin/soundfix':
@@ -7,7 +8,7 @@ class bobcat::soundfix (
       owner   => 'root',
       group   => 'root',
       mode    => '0544',
-      source  => 'puppet:///modules/bobcat/soundfix.sh';
+      content => epp('bobcat/soundfix.sh.epp');
 
     '/etc/systemd/system/soundfix.service':
       ensure  => file,
