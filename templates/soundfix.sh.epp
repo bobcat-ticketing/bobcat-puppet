@@ -39,7 +39,7 @@ for PM_DEV in $PM_DEVS; do
 		write_dev $PM_DEV -1
 
 		# Set mixer PCM volume
-		amixer set PCM <%= $pcmvol %>%
+		amixer set PCM <%= $::bobcat::soundfix::pcmvol %>%
 		
 
 		exit 0
