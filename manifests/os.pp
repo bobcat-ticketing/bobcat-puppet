@@ -2,6 +2,7 @@ class bobcat::os (
   $users = [],
   $ssh_authorized_keys = [],
 ){
+  include ::bobcat::os::rng
   include ::bobcat::os::ntp
   include ::bobcat::os::syslog
   include ::bobcat::os::pki
