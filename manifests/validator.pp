@@ -90,6 +90,7 @@ class bobcat::validator (
       enable => $enabled;
 
     'bobcat-dynconf.timer':
+      ensure => running,
       enable => $enabled;
 
     'bobcat-dynconf.service':
