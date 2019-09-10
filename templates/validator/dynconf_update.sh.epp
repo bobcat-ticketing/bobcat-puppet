@@ -5,7 +5,7 @@ CERT=/etc/bobcat/host.crt
 KEY=/etc/bobcat/host.key
 DESTDIR=/var/lib/bobcat/dynamic
 
-CURL="curl -fsS --cert $CERT --key $KEY"
+CURL="curl -fsS --compressed --cert $CERT --key $KEY"
 LOGGER="logger -t bobcat_dynconf_update"
 
 
