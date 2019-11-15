@@ -4,6 +4,8 @@ class bobcat::validator (
   $kdk_url          = undef,
   $dynconf_base_url = undef,
   $dynconf_timer    = 'hourly',
+  $python_version   = 'latest',
+  $bobcat_version   = 'latest',
 ){
   require bobcat
   require bobcat::facts
@@ -12,10 +14,12 @@ class bobcat::validator (
 
   package {
     'bobcat-python':
-      ensure => latest;
+      ensure => $python_version,
+      notify => Exec['bobcat-systemctl-daemon-reload'];
 
     'bobcat-validator':
-      ensure => latest;
+      ensure => $bobcat_version,
+      notify => Exec['bobcat-systemctl-daemon-reload'];
   }
 
   if $kdk_url {
