@@ -25,7 +25,7 @@ class bobcat::validator (
   
   if $refresh_api {
     package {
-      'mosquitto_pub':
+      'mosquitto-clients':
         ensure => latest;
     }
   }
