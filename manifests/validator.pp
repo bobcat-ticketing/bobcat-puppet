@@ -22,6 +22,13 @@ class bobcat::validator (
       ensure => $bobcat_version,
       notify => Exec['bobcat-systemctl-daemon-reload'];
   }
+  
+  if $refresh_api {
+    package {
+      'mosquitto_pub':
+        ensure => latest;
+    }
+  }
 
   if $kdk_url {
     file {
