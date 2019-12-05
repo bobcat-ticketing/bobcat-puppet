@@ -64,6 +64,7 @@ if [ "$REFRESH" = true ] ; then
 	#let files cool down
 	sleep 5
 	mosquitto_pub -t <%= $bobcat::validator::refresh_api %> -m '{"command":"refresh"}'
+	$LOGGER -p info "bobcat-validator refresh sent"
 fi
 
 <% } -%>
