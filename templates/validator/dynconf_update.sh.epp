@@ -8,6 +8,7 @@ DESTDIR=/var/lib/bobcat/dynamic
 CURL="curl -fsS --compressed --cert $CERT --key $KEY"
 LOGGER="logger -t bobcat_dynconf_update"
 
+REFRESH=false
 
 if [ ! -d $DESTDIR ]; then
 	mkdir -p $DESTDIR
@@ -37,6 +38,7 @@ function fetch_dynconf()
 		if [ -e $tempfile ]; then
 			$LOGGER -p notice "${filename} changed, installing as ${destfile}"
 			mv $tempfile $destfile
+			REFRESH=true
 		else
 			$LOGGER -p info "${filename} not changed"
 		fi
@@ -53,7 +55,15 @@ done
 test -x /usr/local/bin/kdk_update && /usr/local/bin/kdk_update
 
 <%if $bobcat::validator::refresh_api { -%>
-#let files cool down
-sleep 5
-mosquitto_pub -t <%= $bobcat::validator::refresh_api %> -m '{"command":"refresh"}'
+
+if [ $? -eq 0 ]; then
+        REFRESH=true
+fi
+
+if [ "$REFRESH" = true ] ; then
+	#let files cool down
+	sleep 5
+	mosquitto_pub -t <%= $bobcat::validator::refresh_api %> -m '{"command":"refresh"}'
+fi
+
 <% } -%>
