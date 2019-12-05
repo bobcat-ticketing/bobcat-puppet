@@ -51,3 +51,9 @@ for data in blacklists ticklemacros issuer_keyring participants products service
 done
 
 test -x /usr/local/bin/kdk_update && /usr/local/bin/kdk_update
+
+<%=if $bobcat::validator::refresh_api { -%>
+#let files cool down
+sleep 5
+mosquitto_pub -t <%= $bobcat::validator::refresh_api %> -m '{"command":"refresh"}'
+<% } -%>
