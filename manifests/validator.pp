@@ -93,7 +93,8 @@ class bobcat::validator (
   exec {
     'bobcat-systemctl-daemon-reload':
       command     => '/bin/systemctl daemon-reload',
-      refreshonly => true;
+      refreshonly => true,
+      notify  => Service['bobcat-validator'];
   }
 
   service {
