@@ -37,8 +37,10 @@ if [ $? -eq 0 ]; then
 	if [ -s $tempfile ]; then
 		$LOGGER -p notice "KDK keyring changed, installing as $KDK_KEYRING"
 		mv $tempfile $KDK_KEYRING
+		exit 0
 	else
 		$LOGGER -p info "KDK keyring not changed"
+		exit 2
 	fi
 else
 	$LOGGER -p error "Error fetching KDK keyring"

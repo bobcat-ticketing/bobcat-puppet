@@ -8,6 +8,7 @@ DESTDIR=/var/lib/bobcat/dynamic
 CURL="curl -fsS --compressed --cert $CERT --key $KEY"
 LOGGER="logger -t bobcat_dynconf_update"
 
+REFRESH=false
 
 if [ ! -d $DESTDIR ]; then
 	mkdir -p $DESTDIR
@@ -37,6 +38,7 @@ function fetch_dynconf()
 		if [ -e $tempfile ]; then
 			$LOGGER -p notice "${filename} changed, installing as ${destfile}"
 			mv $tempfile $destfile
+			REFRESH=true
 		else
 			$LOGGER -p info "${filename} not changed"
 		fi
@@ -51,3 +53,16 @@ for data in blacklists ticklemacros issuer_keyring participants products service
 done
 
 test -x /usr/local/bin/kdk_update && /usr/local/bin/kdk_update
+
+<%if $bobcat::validator::refresh_api { -%>
+
+if [ $? -eq 0 ]; then
+        REFRESH=true
+fi
+
+if [ "$REFRESH" = true ] ; then	
+	mosquitto_pub -t <%= $bobcat::validator::refresh_api %> -m '{"command":"refresh"}'
+	$LOGGER -p info "bobcat-validator refresh sent"
+fi
+
+<% } -%>

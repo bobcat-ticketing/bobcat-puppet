@@ -6,6 +6,7 @@ class bobcat::validator (
   $dynconf_timer    = 'hourly',
   $python_version   = 'latest',
   $bobcat_version   = 'latest',
+  $refresh_api      = false
 ){
   require bobcat
   require bobcat::facts
@@ -20,6 +21,13 @@ class bobcat::validator (
     'bobcat-validator':
       ensure => $bobcat_version,
       notify => Exec['bobcat-systemctl-daemon-reload'];
+  }
+  
+  if $refresh_api {
+    package {
+      'mosquitto-clients':
+        ensure => latest;
+    }
   }
 
   if $kdk_url {
@@ -85,7 +93,8 @@ class bobcat::validator (
   exec {
     'bobcat-systemctl-daemon-reload':
       command     => '/bin/systemctl daemon-reload',
-      refreshonly => true;
+      refreshonly => true,
+      notify  => Service['bobcat-validator'];
   }
 
   service {
