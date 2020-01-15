@@ -7,6 +7,7 @@ class bobcat::validator (
   $python_version   = 'latest',
   $bobcat_version   = 'latest',
   $refresh_api      = false
+  $nfc              = false
 ){
   require bobcat
   require bobcat::facts
@@ -26,6 +27,13 @@ class bobcat::validator (
   if $refresh_api {
     package {
       'mosquitto-clients':
+        ensure => latest;
+    }
+  }
+
+  if $nfc {
+    package {
+      'pcscd':
         ensure => latest;
     }
   }
