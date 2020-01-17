@@ -6,7 +6,7 @@ class bobcat::validator (
   $dynconf_timer    = 'hourly',
   $python_version   = 'latest',
   $bobcat_version   = 'latest',
-  $refresh_api      = false
+  $refresh_api      = false,
   $nfc              = false
 ){
   require bobcat
