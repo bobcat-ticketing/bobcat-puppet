@@ -3,7 +3,7 @@ class bobcat::os::syslog (
   $log_level       = 'ERROR',
   $target_host     = undef,
   $cafile          = undef,
-  $certFile        = undef,
+  $certfile        = undef,
   $keyfile         = undef,
   $queue_size      = 8192,
   $config_template = 'bobcat/os/rsyslog.conf.epp',
