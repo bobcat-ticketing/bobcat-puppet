@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FILE=/volatilefs.img
-SIZE=`expr 10 \* 1024 \* 1024`
+SIZE=`expr 64 \* 1024 \* 1024`  # 64 MB
 MNT=/mnt/volatilefs
 
 
@@ -50,6 +50,22 @@ function create_key_file()
 	echo $secret | openssl sha256 -binary > $keyfile
 }
 
+function create_container()
+{
+	local loop_device=$1
+	local keyfile=$2
+	local mapper=$3
+	local mountpoint=$4
+
+	cryptsetup luksFormat --batch-mode $loop_device $keyfile
+	cryptsetup luksOpen --key-file $keyfile $loop_device $(basename $mapper)
+	mkfs.ext4 $mapper
+	mount $mapper $mountpoint
+<% if $::bobcat::volatilefs::init_command { -%>
+	<%= $::bobcat::volatilefs::init_command %>
+<% } -%>
+}
+
 function mount_container()
 {
 	local image=$1
@@ -77,20 +93,20 @@ function mount_container()
 	local keyfile=$(mktemp /run/volatilefs_XXXXXXXX)
 	create_key_file $keyfile
 
-	cryptsetup luksOpen $loop_device $(basename $mapper) --key-file $keyfile
+	cryptsetup luksOpen --key-file $keyfile $loop_device $(basename $mapper)
 
 	if [ $? -eq 0 ]; then
+		echo "Trying to mount $image on $mountpoint"
 		mount $mapper $mountpoint
+		if [ $? -eq 0 ]; then
+			echo "Mount failed, recreating $image"
+			cryptsetup luksClose $mapper
+			create_container $loop_device $keyfile $mapper $mountpoint
+		fi
 		echo "$image mounted on $mountpoint"
 	else
 		echo "$image not readable, recreating"
-		cryptsetup luksFormat --batch-mode $loop_device $keyfile
-		cryptsetup luksOpen --key-file $keyfile $loop_device $(basename $mapper)
-		mkfs.ext4 $mapper
-		mount $mapper $mountpoint
-<% if $::bobcat::volatilefs::init_command { -%>
-		<%= $::bobcat::volatilefs::init_command %>
-<% } -%>
+		create_container $loop_device $keyfile $mapper $mountpoint
 	fi
 
 	rm -f $keyfile
