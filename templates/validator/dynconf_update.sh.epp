@@ -25,7 +25,7 @@ function fetch_dynconf()
 	local destfile=$DESTDIR/$filename
 	local tempfile=/tmp/dynconf.${filename}.tmp
 
-	if [ -e $destfile ]; then
+	if [ -s $destfile ]; then
 		zflag="-z ${destfile}"
 	else
 		zflag=""
