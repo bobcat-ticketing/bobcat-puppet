@@ -25,7 +25,7 @@ function fetch_dynconf()
 	local destfile=$DESTDIR/$filename
 	local tempfile=/tmp/dynconf.${filename}.tmp
 
-	if [ -s $destfile ]; then
+	if [ -e $destfile ]; then
 		zflag="-z ${destfile}"
 	else
 		zflag=""
@@ -35,7 +35,7 @@ function fetch_dynconf()
 	$CURL -o $tempfile $zflag $DYNCONF_BASE_URL/$filename
 
 	if [ $? -eq 0 ]; then
-		if [ -e $tempfile ]; then
+		if [ -s $tempfile ]; then
 			$LOGGER -p notice "${filename} changed, installing as ${destfile}"
 			mv $tempfile $destfile
 			REFRESH=true
