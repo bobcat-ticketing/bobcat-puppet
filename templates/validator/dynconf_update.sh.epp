@@ -31,7 +31,8 @@ function fetch_dynconf()
 	fi
 
 	$LOGGER -p info "Fetching $DYNCONF_BASE_URL/$filename"
-	$CURL -o $tempfile $zflag $DYNCONF_BASE_URL/$filename
+	#$CURL -o $tempfile $zflag $DYNCONF_BASE_URL/$filename
+	$CURL -o $tempfile $zflag $DYNCONF_BASE_URL/$filename -v  2>&1  | $LOGGER -p info
 
 	if [ $? -eq 0 ]; then
 		if [ -e $tempfile ]; then
