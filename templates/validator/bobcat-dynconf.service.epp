@@ -4,7 +4,7 @@ After=volatilefs.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/dynconf_update
+ExecStart=/usr/local/bin/dynconf_update --fetchkdk
 
 [Install]
 WantedBy=multi-user.target
