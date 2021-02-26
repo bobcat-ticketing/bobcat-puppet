@@ -11,10 +11,13 @@ global:
   sources:
     bobcat-files: 
       base_url: <%= $::bobcat::validator::dynconf_base_url %>
+      timeout: 5
       cert: /etc/bobcat/host.crt
       key: /etc/bobcat/host.key
-      ca: /etc/bobcat/ca.crt
-      timeout: 5
+      <% if $::bobcat::validator::dynconf_ca_file { -%>
+      ca: <%= $::bobcat::validator::dynconf_ca_file %>
+      <% } -%>
+
 files:
   - output_filename: stops.json
     input_filename: stops.json
