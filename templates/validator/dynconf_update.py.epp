@@ -1,0 +1,323 @@
+#!/opt/bobcat-validator/bin/python
+
+import requests
+import urllib3
+from urllib.parse import urljoin
+urllib3.disable_warnings(urllib3.exceptions.SecurityWarning)
+import sys
+import argparse
+import logging
+from os import path,system
+import yaml
+import json
+from hashlib import md5
+from time import sleep
+from datetime import datetime
+import pytz
+
+def main():
+    parser = argparse.ArgumentParser(description='Bobcat dynconf update client')
+    parser.add_argument('--config', '-c', help="Path for configuration file", type=str, default="/etc/bobcat/dynconf_update.yaml")
+    parser.add_argument('--fetchkdk', '-d', action='store_true', default = False, required=False, help = "Call kdk_update to fetch kdks")
+    parser.add_argument('--service', '-s', action="store_true", default = False, required = False, help="Run in a loop with interval from config. If this flag is not set, the script will execute once and then exit")
+    parser.add_argument('--debug', '-v', action="store_true", default = False, required = False, help="Enable debug logging")
+    args = parser.parse_args()
+
+    if(args.debug == True):
+        loglevel = logging.DEBUG
+    else:
+        loglevel = logging.INFO
+    
+    logger = logging.getLogger()
+    formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
+    ch = logging.StreamHandler()
+    ch.setLevel(loglevel)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    logger.setLevel(loglevel)
+
+    logger.info("Starting Bobcat dynconf update client")
+
+    # Read config file
+    config_path = args.config
+    if not path.exists(config_path):
+        logging.error(f"Config file {config_path} not found. Exiting")
+        exit(1)
+
+    try:
+        f = open(config_path,"r")
+        config = yaml.load(f, Loader=yaml.FullLoader)
+
+    except Exception as e:
+        logging.error(f"Error Parsing config file: {e}")
+        exit(1)
+
+    global_config = config["global"]
+    output_dir = global_config["output_dir"]
+
+    # Init SchemaValidator
+    schema_validator = None
+    if global_config["validations"]["schema"]:
+        from bobcat_common.schema_validator import SchemaValidator
+
+        schema_dir = get_schema_dir()
+        schemas = list()
+
+        for datafile in config["files"]:
+            if "schema_name" in datafile.keys():
+                schemas.append(datafile["schema_name"])
+        try:
+            schema_validator =  SchemaValidator(schemadir = schema_dir, schemas = schemas)
+        except Exception as e:
+            logging.error(f"Could not initiate schema validator. Not validating any file against schema. Exception: {e}")
+
+    # Define data files
+    data_files = list()
+    for datafile_config in config["files"]:
+        source_name = datafile_config["source"]
+        schema_name = None
+        min_entries = None
+        if "schema" in datafile_config.keys():
+            schema_name = datafile_config["schema"]
+        if "min_entries" in datafile_config.keys():
+            min_entries = datafile_config["min_entries"]
+        data_files.append(DataFile(
+            output_dir = output_dir,
+            output_filename = datafile_config["output_filename"],
+            input_filename = datafile_config["input_filename"],
+            source = global_config["sources"][source_name],
+            schema_name = schema_name,
+            min_entries = min_entries
+        ))
+
+    # Fetch and verify datafiles
+    CHECK_IF_MODIFIED_SINCE = global_config["check_if_modified_since"]
+    CHECK_MIN_ENTRIES = global_config["validations"]["min_entries"]
+    HTTP_RETRIES = global_config["retries"]
+    while(True):
+        # Fetch valdata
+        logging.info("Fetching files")
+        
+        conn_error = False
+        first_iteration = True
+        retries = 0
+        while (first_iteration or conn_error) and retries < HTTP_RETRIES:
+            first_iteration = False
+            conn_error = False
+            for data_file in data_files:
+                try:
+                    result = data_file.fetch_data(CHECK_IF_MODIFIED_SINCE)
+                    if not result:
+                        continue
+
+                except requests.exceptions.ReadTimeout as e:
+                    logging.error(f"Timeout fetching {output_filename}: {e}")
+                    conn_error = True
+                    continue
+
+                except requests.exceptions.ConnectionError as e:
+                    logging.error(f"Unable to connect fetching {data_file.output_filename}: {e}")
+                    conn_error = True
+                    continue
+
+                except Exception as e:
+                    logging.error(f"Other failure trying to fetch {data_file.output_filename}: {e}.")
+                    conn_error = True
+                    continue
+
+                validation_result = data_file.validate(schema_validator = schema_validator, check_min_entries = CHECK_MIN_ENTRIES)
+
+                if validation_result:
+                    data_file.write_file()
+                
+            # Fetch dynconf (keys etc) with external command
+            if args.fetchkdk == True:
+                call_fetch_kdk(config["global"])
+            
+            if conn_error:
+                retries += 1
+                logging.error(f"One or more connection error occured. Attempt {retries} of {HTTP_RETRIES}")
+                sleep(30)
+            else:
+                retries = 0
+        
+        # Exit if this is a one-time execution
+        if args.service == True:
+            interval = config["global"]["interval"]
+            sleep(interval)
+        else:
+            exit(0)
+
+class DataFile:
+    def __init__(self, output_dir, output_filename, input_filename, source, schema_name = None, min_entries = None):
+        self.output_filename = output_filename
+        self.input_filename = input_filename
+        self.source = source
+        self.schema_name = schema_name
+        self.min_entries = min_entries
+        self.output_dir = output_dir
+        self.datafile_fullpath = path.join(output_dir, self.output_filename)
+        
+        base_url = self.source["base_url"]
+        self.remote_url =  url = urljoin(base_url, input_filename)    
+
+        self.file_data = None
+    
+    def fetch_data(self, check_if_modified_since = False):
+        # Fetch file contents
+
+        timeout = self.source["timeout"]
+        input_filename = self.input_filename
+        output_filename = self.output_filename
+
+        headers = dict()
+
+        # Set If-Modified-Since
+        if check_if_modified_since and path.exists(self.datafile_fullpath):
+            localts_old_file = datetime.fromtimestamp(path.getmtime(self.datafile_fullpath))
+            gmt_old_file = localts_old_file.astimezone(tz=pytz.timezone("GMT"))
+            gmt_old_file_str = gmt_old_file.strftime('%a, %d %b %Y %H:%M:%S GMT')
+            headers["If-Modified-Since"] = gmt_old_file_str
+
+        request = requests.Request('GET', self.remote_url, headers = headers)
+        session = requests.Session()
+
+        logging.debug(f"Request headers: {request.headers}")
+
+        if "cert" in self.source.keys():
+            cert = self.source["cert"]
+            key = self.source["key"]
+            session.cert = (cert,key)
+        
+        if "ca" in self.source.keys(): 
+            ca = self.source["ca"]
+            session.verify = ca
+
+        # Get the file    
+        prepped = session.prepare_request(request)
+        response = session.send(prepped, timeout = 5)
+        logging.debug(f"Response code/headers: {response}/{response.headers}")
+
+        # Read response
+        status_code = response.status_code
+
+        if status_code == 200:
+            logging.info(f"Succesfully fetched {output_filename} from {self.remote_url}")
+        elif status_code == 304:
+            logging.info(f"File {output_filename} has not changed on server. Keeping old file")
+            return False
+        else:
+            logging.error(f"Got status code {status_code} fetching {self.remote_url}. Keeping old file")
+            return False
+        
+        self.file_data = response
+        return True
+
+    def validate(self, schema_validator = None, check_min_entries = False):
+        output_filename = self.output_filename
+        try:
+            data = self.file_data.json()
+            jsonStr = json.dumps(data)
+
+        except Exception as e:
+            logging.error(f"Unable to parse contents from {self.remote_url} as json. Keeping old file. Exception: {e}")
+            return False
+
+        # Perform schema validation, if configured
+        if schema_validator and self.schema_name:
+            schema_name = self.schema_name
+            logging.debug(f"Validating {output_filename} against schema")
+            try:
+                schema_validator.validate(data,schema_name)
+            except Exception as e:
+                logging.error(f"Error validating {output_filename} against schema. Not publishing. Exception: {e}")
+                return False
+
+        # Check number of entries in file, if configured
+        if check_min_entries:
+            entries = len(data)
+            logging.debug(f"Entries in {output_filename}: {entries}")
+            if self.min_entries and entries < self.min_entries:
+                logging.error(f"Error. {output_filename} contains less entries ({entries}) than the configured limit ({self.min_entries}). Not publishing")
+                return False
+
+        return True
+
+    def write_file(self):
+        # Publish file if it has changed
+        input_filename = self.input_filename
+        output_filename = self.output_filename
+        datafile_fullpath = self.datafile_fullpath
+        new_file_num_entries = len(self.file_data.json())
+        old_file_exists = False
+        old_file_broken = False
+        oldData = None
+        newData = json.dumps(self.file_data.json())
+
+        if path.exists(datafile_fullpath):
+            try:
+                f = open(datafile_fullpath,"r")
+                oldData = json.dumps(json.load(f))
+                f.close
+                old_file_exists = True
+
+            except Exception as e:
+                logging.error(f"Error reading existing datafile {datafile_fullpath}. Exception: {e}")
+                old_file_broken = True
+
+        # Checksum for new file
+        newDataMD5 = None
+        newDataMD5 = md5(newData.encode('utf-8')).hexdigest()
+
+        # Compare checksums if old file exists
+        if old_file_exists:
+            oldDataMD5 = None
+            oldDataMD5 = md5(oldData.encode('utf-8')).hexdigest()
+
+            if newDataMD5 == oldDataMD5:
+                logging.info(f"No changes to {output_filename}. Keeping old file")
+                return
+            else:
+                logging.info(f"File {output_filename} changed. Old/new hash: {oldDataMD5} / {newDataMD5}")
+        else:
+            if old_file_broken:
+                logging.info(f"Replacing old broken {output_filename} with a new one with hash {newDataMD5}")
+            else:
+                logging.info(f"No old {output_filename} exists. Writing new file with hash {newDataMD5}")
+
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
+        try:
+            f = open(datafile_fullpath,"w")
+            f.write(newData)
+            logging.info(f"Wrote {new_file_num_entries} entries to file {datafile_fullpath}")
+            f.close
+
+        except Exception as e:
+            logging.error(f"Error writing to file {datafile_fullpath}. Exception: {e}")
+
+def get_schema_dir():
+    # Find schema dir
+    from importlib.util import find_spec
+    try:
+        bobcat_validator_dir = find_spec("bobcat_validator").submodule_search_locations[0]
+        logging.debug("Trying to find schema dir from bobcat_validator")
+    except Exception as e:
+        logging.error(f"Could not find bobcat_validator schema dir: {e}. Will not test files against schema")
+        return None
+
+    schemadir = path.join(bobcat_validator_dir, "schema")
+    if path.isdir(schemadir):
+        return schemadir
+
+    return None
+
+def call_fetch_kdk(config):
+    command = config["kdk_update_binary"]
+    logging.info(f"Executing external command {command}")
+
+    ret_code = system(command)
+    logging.info(f"Execution of {command} returned {ret_code}")
+
+if __name__ == "__main__":
+    main()
