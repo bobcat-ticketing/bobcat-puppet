@@ -77,8 +77,8 @@ def main():
         source_name = datafile_config["source"]
         schema_name = None
         min_entries = None
-        if "schema" in datafile_config.keys():
-            schema_name = datafile_config["schema"]
+        if "schema_name" in datafile_config.keys():
+            schema_name = datafile_config["schema_name"]
         if "min_entries" in datafile_config.keys():
             min_entries = datafile_config["min_entries"]
         data_files.append(DataFile(
