@@ -1,0 +1,47 @@
+---
+global:
+  output_dir: /var/lib/bobcat/dynamic
+  interval: 3600 # In service mode, the interval for file fetching
+  retries: 5
+  kdk_update_binary: /usr/local/bin/kdk_update
+  check_if_modified_since: True
+  validations:
+    schema: True
+    min_entries: True
+  sources:
+    bobcat-files: 
+      base_url: <%= $::bobcat::validator::dynconf_base_url %>
+      cert: /etc/bobcat/host.crt
+      key: /etc/bobcat/host.key
+      ca: /etc/bobcat/ca.crt
+      timeout: 5
+files:
+  - output_filename: stops.json
+    input_filename: stops.json
+    source: bobcat-files
+    schema_name: stops
+    min_entries: 100
+  - output_filename: services.json
+    input_filename: services.json
+    source: bobcat-files
+    schema_name: services
+  - output_filename: products.json
+    input_filename: products.json
+    source: bobcat-files
+    schema_name: products
+  - output_filename: blacklists.json
+    input_filename: blacklists.json
+    source: bobcat-files
+    schema_name: blacklists
+  - output_filename: ticklemacros.json
+    input_filename: ticklemacros.json
+    source: bobcat-files
+    schema_name: ticklemacros
+  - output_filename: issuer_keyring.json
+    input_filename: issuer_keyring.json
+    source: bobcat-files
+    schema_name: issuer_keyring
+  - output_filename: participants.json
+    input_filename: participants.json
+    source: bobcat-files
+    schema_name: participants

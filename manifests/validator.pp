@@ -51,12 +51,19 @@ class bobcat::validator (
 
   if $dynconf_base_url {
     file {
+      '/etc/bobcat/dynconf_update.yaml':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0644',
+        content => epp('bobcat/validator/dynconf_update.yaml.epp')
+
       '/usr/local/bin/dynconf_update':
         ensure  => file,
         owner   => 'root',
         group   => 'root',
         mode    => '0544',
-        content => epp('bobcat/validator/dynconf_update.sh.epp');
+        content => epp('bobcat/validator/dynconf_update.py.epp');
     }
   }
 
