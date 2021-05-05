@@ -1,15 +1,19 @@
 class bobcat::ddisplay (
   $enabled         = true,
-  $config_template = 'bobcat/ddisplay/ddisplay.yaml.epp'
+  $config_template = 'bobcat/ddisplay/ddisplay.yaml.epp',
+  $python_version  = 'latest',
+  $bobcat_version  = 'latest'
 ){
   require bobcat
 
   package {
     'bobcat-python':
-      ensure => latest;
+      ensure => $python_version,
+      notify => Exec['bobcat-ddisplay-systemctl-daemon-reload'];
 
     'bobcat-ddisplay':
-      ensure => latest;
+      ensure => $bobcat_version,
+      notify => Exec['bobcat-ddisplay-systemctl-daemon-reload'];
   }
 
   file {
@@ -19,6 +23,13 @@ class bobcat::ddisplay (
       group   => 'root',
       mode    => '0444',
       content => epp($config_template);
+  }
+
+  exec {
+    'bobcat-ddisplay-systemctl-daemon-reload':
+      command     => '/bin/systemctl daemon-reload',
+      refreshonly => true,
+      notify      => Service['bobcat-ddisplay'];
   }
 
   service {
