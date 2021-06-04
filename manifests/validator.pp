@@ -1,6 +1,7 @@
 class bobcat::validator (
   $enabled          = true,
   $config_template  = 'bobcat/validator/validator.yaml.epp',
+  $backup           = true,
   $kdk_url          = undef,
   $dynconf_base_url = undef,
   $dynconf_timer    = 'hourly',
@@ -79,6 +80,7 @@ class bobcat::validator (
       group   => 'root',
       mode    => '0444',
       content => epp($config_template),
+      backup  => $backup, 
       notify  => Service['bobcat-validator'];
 
     '/etc/systemd/system/bobcat-dynconf.timer':
