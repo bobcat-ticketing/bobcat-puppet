@@ -46,6 +46,7 @@ class bobcat::validator (
         owner   => 'root',
         group   => 'root',
         mode    => '0544',
+        backup  => $backup, 
         content => epp('bobcat/validator/kdk_update.sh.epp');
     }
   }
@@ -57,6 +58,7 @@ class bobcat::validator (
         owner   => 'root',
         group   => 'root',
         mode    => '0544',
+        backup  => $backup, 
         content => epp('bobcat/validator/dynconf_update.sh.epp');
     }
   }
@@ -88,6 +90,7 @@ class bobcat::validator (
       owner   => 'root',
       group   => 'root',
       mode    => '0444',
+      backup  => $backup, 
       content => epp('bobcat/validator/bobcat-dynconf.timer.epp'),
       notify  => Exec['bobcat-systemctl-daemon-reload'];
 
@@ -96,6 +99,7 @@ class bobcat::validator (
       owner   => 'root',
       group   => 'root',
       mode    => '0444',
+      backup  => $backup, 
       content => epp('bobcat/validator/bobcat-dynconf.service.epp'),
       notify  => Exec['bobcat-systemctl-daemon-reload'];
   }
