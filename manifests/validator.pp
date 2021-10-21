@@ -1,14 +1,15 @@
 class bobcat::validator (
-  $enabled          = true,
-  $config_template  = 'bobcat/validator/validator.yaml.epp',
-  $backup           = true,
-  $kdk_url          = undef,
-  $dynconf_base_url = undef,
-  $dynconf_timer    = 'hourly',
-  $python_version   = 'latest',
-  $bobcat_version   = 'latest',
-  $refresh_api      = false,
-  $nfc              = false
+  $enabled                  = true,
+  $config_template          = 'bobcat/validator/validator.yaml.epp',
+  $backup                   = true,
+  $kdk_url                  = undef,
+  $dynconf_base_url         = undef,
+  $dynconf_timer            = 'hourly',
+  $dynconf_randomized_delay = 0,
+  $python_version           = 'latest',
+  $bobcat_version           = 'latest',
+  $refresh_api              = false,
+  $nfc                      = false
 ){
   require bobcat
   require bobcat::facts
