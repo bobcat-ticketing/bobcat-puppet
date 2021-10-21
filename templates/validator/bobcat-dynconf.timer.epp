@@ -4,6 +4,7 @@ After=network.target
 
 [Timer]
 OnCalendar=<%= $::bobcat::validator::dynconf_timer %>
+RandomizedDelaySec=<%= $::bobcat::validator::dynconf_randomized_delay %>
 Persistent=true
 
 [Install]
