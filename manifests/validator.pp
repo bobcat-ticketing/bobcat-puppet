@@ -58,6 +58,7 @@ class bobcat::validator (
         ensure  => file,
         owner   => 'root',
         group   => 'root',
+        backup  => $backup, 
         mode    => '0644',
         content => epp('bobcat/validator/dynconf_update.yaml.epp');
 
