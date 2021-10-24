@@ -68,7 +68,7 @@ class bobcat::validator (
         group   => 'root',
         mode    => '0544',
         backup  => $backup, 
-        content => epp('bobcat/validator/dynconf_update.sh.epp');
+        content => epp('bobcat/validator/dynconf_update.py.epp');
     }
   }
 
