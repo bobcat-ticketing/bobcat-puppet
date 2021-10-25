@@ -111,7 +111,7 @@ def main():
                         continue
 
                 except requests.exceptions.ReadTimeout as e:
-                    logging.error(f"Timeout fetching {output_filename}: {e}")
+                    logging.error(f"Timeout fetching {data_file.output_filename}: {e}")
                     conn_error = True
                     continue
 
