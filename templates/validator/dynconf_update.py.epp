@@ -13,7 +13,6 @@ import json
 from hashlib import md5
 from time import sleep
 from datetime import datetime
-import pytz
 
 def main():
     parser = argparse.ArgumentParser(description='Bobcat dynconf update client')
@@ -175,9 +174,22 @@ class DataFile:
         # Set If-Modified-Since
         if check_if_modified_since and path.exists(self.datafile_fullpath):
             localts_old_file = datetime.fromtimestamp(path.getmtime(self.datafile_fullpath))
-            gmt_old_file = localts_old_file.astimezone(tz=pytz.timezone("GMT"))
-            gmt_old_file_str = gmt_old_file.strftime('%a, %d %b %Y %H:%M:%S GMT')
-            headers["If-Modified-Since"] = gmt_old_file_str
+            try:
+                # If Python < 3.9, use pytz
+                import pytz
+                gmt_old_file = localts_old_file.astimezone(tz=pytz.timezone("GMT"))
+            except Exception as e:
+                # If Python 3.9, then use zoneinfo instead of pytz
+                try:
+                    from zoneinfo import ZoneInfo
+                    gmt_old_file = localts_old_file.astimezone(tz=ZoneInfo("GMT"))
+                except Exception as e:
+                    logging.error(f"Cannot determine local timezone. Downloading {output_filename} file with no If-Modified-Since condition")
+
+            if gmt_old_file:
+                gmt_old_file_str = gmt_old_file.strftime('%a, %d %b %Y %H:%M:%S GMT')
+                logging.debug(f"Adding If-Modified-Since: {gmt_old_file_str}")
+                headers["If-Modified-Since"] = gmt_old_file_str            
 
         request = requests.Request('GET', self.remote_url, headers = headers)
         session = requests.Session()
