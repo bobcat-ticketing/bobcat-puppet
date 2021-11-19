@@ -48,11 +48,15 @@ function fetch_dynconf()
 	rm -f $tempfile
 }
 
+<%if $bobcat::validator::dynconf_fetch_all { -%>
 for data in blacklists ticklemacros issuer_keyring participants products services stops; do
 	fetch_dynconf $data
 done
+<% } -%>
 
+<%if $bobcat::validator::dynconf_fetch_kdk { -%>
 test -x /usr/local/bin/kdk_update && /usr/local/bin/kdk_update
+<% } -%>
 
 <%if $bobcat::validator::refresh_api { -%>
 

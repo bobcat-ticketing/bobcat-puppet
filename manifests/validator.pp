@@ -6,6 +6,8 @@ class bobcat::validator (
   $dynconf_base_url         = undef,
   $dynconf_timer            = 'hourly',
   $dynconf_randomized_delay = 0,
+  $dynconf_fetch_all        = true,
+  $dynconf_fetch_kdk        = true,
   $python_version           = 'latest',
   $bobcat_version           = 'latest',
   $refresh_api              = false,
