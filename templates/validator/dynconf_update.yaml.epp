@@ -8,8 +8,9 @@ global:
   validations:
     schema: True
     min_entries: True
+    verify_after_write: True # Used to troubleshoot issue with 0 byte files
   sources:
-    bobcat-files: 
+    bobcat-files:
       base_url: <%= $::bobcat::validator::dynconf_base_url %>
       timeout: 5
       cert: /etc/bobcat/host.crt

@@ -70,6 +70,11 @@ def main():
         except Exception as e:
             logging.error(f"Could not initiate schema validator. Not validating any file against schema. Exception: {e}")
 
+    # Check verify_after_write flag
+    VERIFY_AFTER_WRITE = False
+    if "verify_after_write" in global_config["validations"].keys() and global_config["validations"]["verify_after_write"]:
+        VERIFY_AFTER_WRITE = True
+
     # Define data files
     data_files = list()
     for datafile_config in config["files"]:
@@ -124,10 +129,24 @@ def main():
                     conn_error = True
                     continue
 
-                validation_result = data_file.validate(schema_validator = schema_validator, check_min_entries = CHECK_MIN_ENTRIES)
+                validation_successful = data_file.validate(data_file.file_data, schema_validator = schema_validator, check_min_entries = CHECK_MIN_ENTRIES)
 
-                if validation_result:
+                if validation_successful:
                     data_file.write_file()
+                else:
+                    logging.error(f"Not updating file {data_file.output_filename}")
+
+                if VERIFY_AFTER_WRITE:
+                    if path.exists(data_file.full_path):
+                        try:
+                            f = open(data_file.full_path,"r")
+                            written_file_data = f.read()
+                            f.close
+                            if not data_file.validate(written_file_data, schema_validator = schema_validator, check_min_entries = CHECK_MIN_ENTRIES, LOCAL_FILE_VERIFICATION = True):
+                                logging.error(f"Validation of written file {data_file.output_filename} failed")
+
+                        except Exception as e:
+                            logging.error(f"Error reading data file just written: {data_file.full_path}. Exception: {e}")
                 
             # Fetch dynconf (keys etc) with external command
             if args.fetchkdk == True:
@@ -155,7 +174,7 @@ class DataFile:
         self.schema_name = schema_name
         self.min_entries = min_entries
         self.output_dir = output_dir
-        self.datafile_fullpath = path.join(output_dir, self.output_filename)
+        self.full_path = path.join(output_dir, self.output_filename)
         
         base_url = self.source["base_url"]
         self.remote_url =  url = urljoin(base_url, input_filename)    
@@ -172,24 +191,27 @@ class DataFile:
         headers = dict()
 
         # Set If-Modified-Since
-        if check_if_modified_since and path.exists(self.datafile_fullpath):
-            localts_old_file = datetime.fromtimestamp(path.getmtime(self.datafile_fullpath))
-            try:
-                # If Python < 3.9, use pytz
-                import pytz
-                gmt_old_file = localts_old_file.astimezone(tz=pytz.timezone("GMT"))
-            except Exception as e:
-                # If Python 3.9, then use zoneinfo instead of pytz
+        if check_if_modified_since and path.exists(self.full_path):
+            if path.getsize(self.full_path) == 0:
+                logging.error(f"Existing file {output_filename} is 0 bytes. Downloading new file unconditionally")
+            else:
+                localts_old_file = datetime.fromtimestamp(path.getmtime(self.full_path))
                 try:
-                    from zoneinfo import ZoneInfo
-                    gmt_old_file = localts_old_file.astimezone(tz=ZoneInfo("GMT"))
+                    # If Python < 3.9, use pytz
+                    import pytz
+                    gmt_old_file = localts_old_file.astimezone(tz=pytz.timezone("GMT"))
                 except Exception as e:
-                    logging.error(f"Cannot determine local timezone. Downloading {output_filename} file with no If-Modified-Since condition")
+                    # If Python 3.9, then use zoneinfo instead of pytz
+                    try:
+                        from zoneinfo import ZoneInfo
+                        gmt_old_file = localts_old_file.astimezone(tz=ZoneInfo("GMT"))
+                    except Exception as e:
+                        logging.error(f"Cannot determine local timezone. Downloading {output_filename} file with no If-Modified-Since condition")
 
-            if gmt_old_file:
-                gmt_old_file_str = gmt_old_file.strftime('%a, %d %b %Y %H:%M:%S GMT')
-                logging.debug(f"Adding If-Modified-Since: {gmt_old_file_str}")
-                headers["If-Modified-Since"] = gmt_old_file_str            
+                if gmt_old_file:
+                    gmt_old_file_str = gmt_old_file.strftime('%a, %d %b %Y %H:%M:%S GMT')
+                    logging.debug(f"Adding If-Modified-Since: {gmt_old_file_str}")
+                    headers["If-Modified-Since"] = gmt_old_file_str            
 
         request = requests.Request('GET', self.remote_url, headers = headers)
         session = requests.Session()
@@ -222,17 +244,34 @@ class DataFile:
             logging.error(f"Got status code {status_code} fetching {self.remote_url}. Keeping old file")
             return False
         
-        self.file_data = response
+        self.file_data = response.text
         return True
 
-    def validate(self, schema_validator = None, check_min_entries = False):
+    def validate(self, file_data, schema_validator = None, check_min_entries = False, LOCAL_FILE_VERIFICATION = False):
         output_filename = self.output_filename
+
+        if len(file_data) < 2:
+            if LOCAL_FILE_VERIFICATION:
+                logging.error(f"Size of local file {output_filename} is {len(file_data)} bytes")
+            else:
+                logging.error(f"Size of downloaded file {self.remote_url} is {len(file_data)} bytes")
+            
+            return False
+        else:
+            if LOCAL_FILE_VERIFICATION:
+                logging.debug(f"Number of bytes of local file {output_filename} is {len(file_data)}")
+            else:
+                logging.debug(f"Number of bytes of downloaded file {self.remote_url} is {len(file_data)}")
+
         try:
-            data = self.file_data.json()
-            jsonStr = json.dumps(data)
+            #data = file_data.json()
+            data = json.loads(file_data)
 
         except Exception as e:
-            logging.error(f"Unable to parse contents from {self.remote_url} as json. Keeping old file. Exception: {e}")
+            if LOCAL_FILE_VERIFICATION:
+                logging.error(f"Unable to parse contents from local file {output_filename} as json. Exception: {e}")
+            else:
+                logging.error(f"Unable to parse contents for {self.remote_url} as json. Exception: {e}")
             return False
 
         # Perform schema validation, if configured
@@ -242,7 +281,7 @@ class DataFile:
             try:
                 schema_validator.validate(data,schema_name)
             except Exception as e:
-                logging.error(f"Error validating {output_filename} against schema. Not publishing. Exception: {e}")
+                logging.error(f"Error validating {output_filename} against schema. Exception: {e}")
                 return False
 
         # Check number of entries in file, if configured
@@ -250,7 +289,7 @@ class DataFile:
             entries = len(data)
             logging.debug(f"Entries in {output_filename}: {entries}")
             if self.min_entries and entries < self.min_entries:
-                logging.error(f"Error. {output_filename} contains less entries ({entries}) than the configured limit ({self.min_entries}). Not publishing")
+                logging.error(f"Error. {output_filename} contains less entries ({entries}) than the configured limit ({self.min_entries})")
                 return False
 
         return True
@@ -259,22 +298,24 @@ class DataFile:
         # Publish file if it has changed
         input_filename = self.input_filename
         output_filename = self.output_filename
-        datafile_fullpath = self.datafile_fullpath
-        new_file_num_entries = len(self.file_data.json())
+        full_path = self.full_path
+        #new_file_num_entries = len(self.file_data.json())
+        new_file_num_entries = len(json.loads(self.file_data))
         old_file_exists = False
         old_file_broken = False
         oldData = None
-        newData = json.dumps(self.file_data.json())
+        #newData = json.dumps(self.file_data.json())
+        newData = self.file_data
 
-        if path.exists(datafile_fullpath):
+        if path.exists(full_path):
             try:
-                f = open(datafile_fullpath,"r")
+                f = open(full_path,"r")
                 oldData = json.dumps(json.load(f))
                 f.close
                 old_file_exists = True
 
             except Exception as e:
-                logging.error(f"Error reading existing datafile {datafile_fullpath}. Exception: {e}")
+                logging.error(f"Error reading existing datafile {full_path}. Exception: {e}")
                 old_file_broken = True
 
         # Checksum for new file
@@ -300,13 +341,13 @@ class DataFile:
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
         try:
-            f = open(datafile_fullpath,"w")
+            f = open(full_path,"w")
             f.write(newData)
-            logging.info(f"Wrote {new_file_num_entries} entries to file {datafile_fullpath}")
+            logging.info(f"Wrote {new_file_num_entries} entries to file {full_path}")            
             f.close
 
         except Exception as e:
-            logging.error(f"Error writing to file {datafile_fullpath}. Exception: {e}")
+            logging.error(f"Error writing to file {full_path}. Exception: {e}")
 
 def get_schema_dir():
     # Find schema dir
