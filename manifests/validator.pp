@@ -8,7 +8,7 @@ class bobcat::validator (
   $dynconf_randomized_delay = 0,
   $dynconf_fetch_all        = true,
   $dynconf_fetch_kdk        = true,
-  $python_version           = 'latest',
+  $python_version           = false,
   $bobcat_version           = 'latest',
   $refresh_api              = false,
   $nfc                      = false
@@ -18,11 +18,15 @@ class bobcat::validator (
   require bobcat::volatilefs
   require bobcat::soundfix
 
-  package {
-    'bobcat-python':
-      ensure => $python_version,
-      notify => Exec['bobcat-systemctl-daemon-reload'];
+  if $python_version {
+    package {
+      'bobcat-python':
+        ensure => $python_version,
+        notify => Exec['bobcat-systemctl-daemon-reload'];
+    }
+  }
 
+  package {
     'bobcat-validator':
       ensure => $bobcat_version,
       notify => Exec['bobcat-systemctl-daemon-reload'];
