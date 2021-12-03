@@ -71,4 +71,17 @@ fi
 
 <% } -%>
 
+<%if $bobcat::validator::dynconf_db_provision { -%>
+DYNCONF_DB_URL=<%= $::bobcat::validator::dynconf_db_url %>
+DYNCONF_DB_DESTFILE=<%= $::bobcat::validator::dynconf_db_destfile %>
+if [ ! -f "$DYNCONF_DB_DESTFILE" ]; then
+	$CURL -o $DYNCONF_DB_DESTFILE $DYNCONF_DB_URL
+	if [ $? -eq 0 ]; then
+		$LOGGER -p notice "Installed Dynconf DB as ${DYNCONF_DB_DESTFILE}"
+	else
+		$LOGGER -p warning "Failed to fetch Dynconf DB"
+	fi
+fi
+<% } -%>
+
 exit 0

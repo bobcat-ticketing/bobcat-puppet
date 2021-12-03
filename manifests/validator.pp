@@ -11,7 +11,10 @@ class bobcat::validator (
   $python_version           = false,
   $bobcat_version           = 'latest',
   $refresh_api              = false,
-  $nfc                      = false
+  $nfc                      = false,
+  $dynconf_db_provision     = false,
+  $dynconf_db_url           = undef,
+  $dynconf_db_destfile      = undef
 ){
   require bobcat
   require bobcat::facts
