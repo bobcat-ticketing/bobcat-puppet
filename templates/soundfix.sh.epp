@@ -40,7 +40,6 @@ for PM_DEV in $PM_DEVS; do
 
 		# Set mixer PCM volume
 		amixer set PCM <%= $::bobcat::soundfix::pcmvol %>%
-		
 
 		exit 0
 	fi
