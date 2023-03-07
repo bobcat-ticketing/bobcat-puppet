@@ -7,6 +7,7 @@ class bobcat::validator (
   $dynconf_timer            = 'hourly',
   $dynconf_randomized_delay = 0,
   $dynconf_fetch_all        = true,
+  $dynconf_fetch_datasets   = ["blacklists", "ticklemacros", "issuer_keyring", "participants", "products", "services", "stops"],
   $dynconf_fetch_kdk        = true,
   $python_version           = false,
   $bobcat_version           = 'latest',

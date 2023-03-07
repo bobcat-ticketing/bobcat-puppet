@@ -49,7 +49,7 @@ function fetch_dynconf()
 }
 
 <%if $bobcat::validator::dynconf_fetch_all { -%>
-for data in blacklists ticklemacros issuer_keyring participants products services stops; do
+for data in <%= join($bobcat::validator::dynconf_fetch_datasets, " ") %>; do
 	fetch_dynconf $data
 done
 <% } -%>
