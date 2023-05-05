@@ -12,7 +12,9 @@ class bobcat::validator (
   $python_version           = false,
   $bobcat_version           = 'latest',
   $refresh_api              = false,
-  $nfc                      = false
+  $nfc                      = false,
+  $ca_file                  = undef,
+  $webpki_ca_file           = "/etc/ssl/certs/ca-certificates.crt"
 ){
   require bobcat
   require bobcat::facts
@@ -110,6 +112,27 @@ class bobcat::validator (
       backup  => $backup, 
       content => epp('bobcat/validator/bobcat-dynconf.service.epp'),
       notify  => Exec['bobcat-systemctl-daemon-reload'];
+  }
+
+  if $ca_file {
+    concat {
+      $ca_file:
+        owner => 'root',
+        group => 'root',
+        mode  => '0444';
+    }
+
+    concat::fragment {
+      'webpki_ca_file':
+        target => $ca_file,
+        source => $webpki_ca_file,
+        order  => '01';
+
+      'puppet_ca_file':
+        target => $ca_file,
+        source  => '${bobcat::puppet_ssl}/certs/ca.pem',
+        order   => '02;
+    }
   }
 
   exec {
