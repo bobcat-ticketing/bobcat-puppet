@@ -130,8 +130,8 @@ class bobcat::validator (
 
       'puppet_ca_file':
         target => $ca_file,
-        source  => '${bobcat::puppet_ssl}/certs/ca.pem',
-        order   => '02;
+        source => '${bobcat::puppet_ssl}/certs/ca.pem',
+        order  => '02';
     }
   }
 
