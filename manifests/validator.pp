@@ -128,9 +128,9 @@ class bobcat::validator (
         source => $webpki_ca_file,
         order  => '01';
 
-      'puppet_ca_file':
+      'bobcat_ca_file':
         target => $ca_file,
-        source => '${bobcat::puppet_ssl}/certs/ca.pem',
+        source => '/etc/bobcat/ca.crt',
         order  => '02';
     }
   }
