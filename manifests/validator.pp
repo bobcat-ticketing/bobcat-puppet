@@ -14,6 +14,7 @@ class bobcat::validator (
   $refresh_api              = false,
   $nfc                      = false,
   $ca_file                  = undef,
+  $puppet_ca_file           = "/etc/puppet/ssl/certs/ca.pem",
   $webpki_ca_file           = "/etc/ssl/certs/ca-certificates.crt"
 ){
   require bobcat
@@ -123,14 +124,14 @@ class bobcat::validator (
     }
 
     concat::fragment {
+      'puppet_ca_file':
+        target => $ca_file,
+        source => $puppet_ca_file,
+        order  => '01';
+
       'webpki_ca_file':
         target => $ca_file,
         source => $webpki_ca_file,
-        order  => '01';
-
-      'bobcat_ca_file':
-        target => $ca_file,
-        source => '/etc/bobcat/ca.crt',
         order  => '02';
     }
   }
