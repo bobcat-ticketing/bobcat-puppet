@@ -9,8 +9,8 @@ class bobcat::validator (
   $python_version           = 'latest',
   $bobcat_version           = 'latest',
   $refresh_api              = false,
-  $nfc                      = false
-  $headless                 = false,
+  $nfc                      = false,
+  $headless                 = false
 ){
   require bobcat
   require bobcat::facts
