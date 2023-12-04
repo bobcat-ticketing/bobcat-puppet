@@ -10,6 +10,7 @@ class bobcat::validator (
   $bobcat_version           = 'latest',
   $refresh_api              = false,
   $nfc                      = false
+  $headless                 = false,
 ){
   require bobcat
   require bobcat::facts
@@ -20,12 +21,26 @@ class bobcat::validator (
     'bobcat-python':
       ensure => $python_version,
       notify => Exec['bobcat-systemctl-daemon-reload'];
-
-    'bobcat-validator':
-      ensure => $bobcat_version,
-      notify => Exec['bobcat-systemctl-daemon-reload'];
   }
-  
+
+  if $headless {
+    package {
+      'bobcat-validator':
+        ensure => "absent";
+      'bobcat-validator-headless':
+        ensure => $bobcat_version,
+        notify => Exec['bobcat-systemctl-daemon-reload'];
+    }
+  } else {
+    package {
+      'bobcat-validator':
+        ensure => $bobcat_version,
+        notify => Exec['bobcat-systemctl-daemon-reload'];
+      'bobcat-validator-headless':
+        ensure => "absent";
+    }
+  }
+
   if $refresh_api {
     package {
       'mosquitto-clients':
