@@ -2,6 +2,7 @@ class bobcat::validator (
   $enabled                  = true,
   $config_template          = 'bobcat/validator/validator.yaml.epp',
   $backup                   = true,
+  $dynconf_enabled          = true,
   $kdk_url                  = undef,
   $dynconf_base_url         = undef,
   $dynconf_timer            = 'hourly',
@@ -67,8 +68,13 @@ class bobcat::validator (
         owner   => 'root',
         group   => 'root',
         mode    => '0544',
-        backup  => $backup, 
+        backup  => $backup,
         content => epp('bobcat/validator/kdk_update.sh.epp');
+    }
+  } else {
+    file {
+      '/usr/local/bin/kdk_update':
+        ensure  => absent;
     }
   }
 
@@ -82,7 +88,12 @@ class bobcat::validator (
         backup  => $backup, 
         content => epp('bobcat/validator/dynconf_update.sh.epp');
     }
-  }
+    } else {
+      file {
+        '/usr/local/bin/dynconf_update':
+          ensure  => absent;
+      }
+    }
 
   file {
     '/var/lib/bobcat':
@@ -120,7 +131,7 @@ class bobcat::validator (
       owner   => 'root',
       group   => 'root',
       mode    => '0444',
-      backup  => $backup, 
+      backup  => $backup,
       content => epp('bobcat/validator/bobcat-dynconf.service.epp'),
       notify  => Exec['bobcat-systemctl-daemon-reload'];
   }
@@ -129,7 +140,7 @@ class bobcat::validator (
     'bobcat-systemctl-daemon-reload':
       command     => '/bin/systemctl daemon-reload',
       refreshonly => true,
-      notify  => Service['bobcat-validator'];
+      notify      => Service['bobcat-validator'];
   }
 
   service {
@@ -139,9 +150,9 @@ class bobcat::validator (
 
     'bobcat-dynconf.timer':
       ensure => running,
-      enable => $enabled;
+      enable => $dynconf_enabled;
 
     'bobcat-dynconf.service':
-      enable => $enabled;
+      enable => $dynconf_enabled;
   }
 }
