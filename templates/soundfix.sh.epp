@@ -41,6 +41,9 @@ for PM_DEV in $PM_DEVS; do
 		# Set mixer PCM volume
 		amixer set PCM <%= $::bobcat::soundfix::pcmvol %>%
 
+		# Disable headphones
+		amixer set Headphone 0
+
 		exit 0
 	fi
 done
