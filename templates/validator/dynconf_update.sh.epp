@@ -56,19 +56,16 @@ done
 
 <%if $bobcat::validator::dynconf_fetch_kdk { -%>
 test -x /usr/local/bin/kdk_update && /usr/local/bin/kdk_update
-<% } -%>
-
-<%if $bobcat::validator::refresh_api { -%>
-
 if [ $? -eq 0 ]; then
         REFRESH=true
 fi
+<% } -%>
 
+<%if $bobcat::validator::refresh_api { -%>
 if [ "$REFRESH" = true ] ; then	
 	mosquitto_pub -t <%= $bobcat::validator::refresh_api %> -m '{"command":"refresh"}'
 	$LOGGER -p info "bobcat-validator refresh sent"
 fi
-
 <% } -%>
 
 exit 0
