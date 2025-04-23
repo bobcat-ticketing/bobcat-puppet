@@ -78,9 +78,8 @@ function mount_container()
 		exit 1
 	fi
 
-	if [ ! -d $mountpoint ]; then
-		mkdir $mountpoint
-	fi
+	rm -fr $mountpoint
+	mkdir $mountpoint
 
 	if [ ! -f $image ]; then
 		echo "$image not found, creating new"
@@ -98,7 +97,7 @@ function mount_container()
 	if [ $? -eq 0 ]; then
 		echo "Trying to mount $image on $mountpoint"
 		mount $mapper $mountpoint
-		if [ $? -eq 0 ]; then
+		if [ $? -ne 0 ]; then
 			echo "Mount failed, recreating $image"
 			cryptsetup luksClose $mapper
 			create_container $loop_device $keyfile $mapper $mountpoint
